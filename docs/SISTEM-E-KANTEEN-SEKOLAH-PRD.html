@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>SISTEM E-KANTEEN SEKOLAH (Functional Specification Document)</title>
+<style>
+  @page { size: A4; margin: 20mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, 'Times New Roman', serif; font-size: 11pt; line-height: 1.6; color: #1a1a1a; max-width: 210mm; margin: 0 auto; padding: 20mm; background: #fff; }
+  h1 { font-family: Arial, Helvetica, sans-serif; font-size: 16pt; border-bottom: 3px solid #1a5276; padding-bottom: 6px; margin-top: 36px; page-break-before: always; color: #1a5276; }
+  h1:first-of-type { page-break-before: avoid; }
+  h2 { font-family: Arial, Helvetica, sans-serif; font-size: 13pt; color: #1a5276; margin-top: 24px; }
+  .doc-title { font-family: Arial, Helvetica, sans-serif; font-size: 20pt; font-weight: bold; text-align: center; color: #1a5276; margin-bottom: 4px; }
+  .doc-sub { text-align: center; font-size: 11pt; color: #555; margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; break-inside: avoid; font-size: 10pt; }
+  th, td { border: 1px solid #999; padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #1a5276; color: #fff; font-family: Arial, Helvetica, sans-serif; }
+  tr:nth-child(even) td { background: #f2f6fa; }
+  .info-table th { width: 28%; background: #d6e4f0; color: #1a1a1a; }
+  .diagram-box { border: 1px solid #999; padding: 12px; margin: 12px 0; break-inside: avoid; background: #fbfbfb; }
+  .diagram-box svg { width: 100%; height: auto; display: block; }
+  .note { background: #fef9e7; border: 1px solid #d4ac0d; padding: 12px; margin-top: 20px; font-size: 10pt; }
+  @media print {
+    body { padding: 0; max-width: none; }
+    h1 { page-break-before: always; }
+    table, .diagram-box { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-title">SISTEM E-KANTEEN SEKOLAH<br>(Functional Specification Document)</div>
+<div class="doc-sub">Platform Manajemen Kanteen Digital Berbasis Web dengan Kartu Prabayar Berbarcode</div>
+
+<table class="info-table">
+  <tr><th>Subjek</th><td>Pengembangan Sistem e-Kanteen Sekolah Berbasis Web dengan Kartu Prabayar Berbarcode</td></tr>
+  <tr><th>Tempat</th><td>Sekolah — Lingkungan Kanteen, Kasir Sekolah, dan Gerai Vendor</td></tr>
+  <tr><th>Peserta</th><td>Super Admin, Kasir Sekolah, Vendor (Pemilik Gerai &amp; Kasir Gerai), Orang Tua / Siswa</td></tr>
+  <tr><th>Deskripsi</th><td>Sistem transaksi nontunai kanteen sekolah: kartu siswa berbarcode, top up via web &amp; tunai, pembelian cepat, potongan fee pengelola &amp; sistem otomatis, limit harian, notifikasi orang tua, serta laporan dan ekspor data.</td></tr>
+  <tr><th>Versi</th><td>1.0 — 16 September 2026</td></tr>
+</table>
+
+<h1>1. INFORMASI UMUM</h1>
+
+<h2>1.1 PENDAHULUAN</h2>
+<p>Transaksi tunai di kanteen sekolah menimbulkan antrean panjang, risiko uang hilang, sulitnya pengawasan orang tua atas jajan anak, serta pencatatan pendapatan vendor dan kontribusi operasional sekolah yang tidak tertib. Sekolah membutuhkan sistem terpusat yang menggantikan uang tunai dengan kartu prabayar berbarcode: setiap siswa memiliki identitas dan saldo digital, setiap pembelian tercatat atomik, fee kebersihan / keamanan / pengelolaan dan fee platform terpotong otomatis, dan orang tua menerima notifikasi real-time. Dokumen ini menspesifikasikan kebutuhan fungsional, modul, dan arsitektur Sistem e-Kanteen Sekolah berdasarkan 12 persyaratan yang disepakati, ditambah modul pelengkap yang diperlukan agar sistem siap operasi.</p>
+
+<h2>1.2 Tujuan Aplikasi</h2>
+<p>Menyediakan platform web e-kanteen yang mempercepat transaksi nontunai siswa, menjamin distribusi dana yang adil dan otomatis kepada vendor, sekolah, dan pengelola platform, serta memberi orang tua kendali (limit harian, notifikasi) dan memberi sekolah laporan keuangan yang akurat dan dapat diaudit.</p>
+
+<h1>2. KEBUTUHAN</h1>
+
+<h2>2.1 Penggunaan Sistem</h2>
+<p>Sistem digunakan oleh peran berikut melalui Web Dashboard dan titik kasir gerai:</p>
+<table>
+  <tr><th style="width:8%">No</th><th style="width:24%">User</th><th>Deskripsi</th></tr>
+  <tr><td>1</td><td>Super Admin</td><td>Pengelola keseluruhan: kartu siswa, pengguna, vendor/gerai, konfigurasi fee, limit, laporan global, ekspor data, audit log.</td></tr>
+  <tr><td>2</td><td>Kasir Sekolah</td><td>Staf sekolah yang memproses top up tunai dengan memindai barcode kartu dan menerima uang tunai.</td></tr>
+  <tr><td>3</td><td>Vendor (Pemilik Gerai)</td><td>Mengelola produk gerai sendiri (nama, harga, ketersediaan) dan melihat laporan penjualan gerainya.</td></tr>
+  <tr><td>4</td><td>Kasir Gerai Vendor</td><td>Operator gerai yang memindai barcode siswa dan mengonfirmasi transaksi pembelian.</td></tr>
+  <tr><td>5</td><td>Orang Tua / Siswa</td><td>Top up via web dashboard, memantau saldo dan riwayat, mengatur limit harian (Orang Tua), menerima notifikasi transaksi.</td></tr>
+</table>
+
+<h2>2.2 Penjelasan Fungsional Umum</h2>
+<p>Alur fungsional end-to-end sistem adalah sebagai berikut:</p>
+<table>
+  <tr><th style="width:8%">No</th><th style="width:28%">Name</th><th>Description</th></tr>
+  <tr><td>1</td><td>Registrasi Kartu Siswa</td><td>Super Admin mendaftarkan barcode unik per siswa, validasi duplikasi, kelola status aktif/nonaktif.</td></tr>
+  <tr><td>2</td><td>Top Up via Web Dashboard</td><td>Orang Tua/Siswa mengisi saldo via payment gateway; validasi nominal minimum; saldo masuk ≤30 detik + konfirmasi.</td></tr>
+  <tr><td>3</td><td>Top Up Tunai via Kasir</td><td>Kasir Sekolah memindai barcode, verifikasi siswa &amp; saldo, konfirmasi tunai, catat identitas kasir.</td></tr>
+  <tr><td>4</td><td>Transaksi Pembelian</td><td>Kasir gerai memindai barcode, validasi saldo + fee + limit, potong saldo atomik, catat detail; ≤5 detik.</td></tr>
+  <tr><td>5</td><td>Fee &amp; Distribusi Dana Otomatis</td><td>Fee pengelola (kebersihan, keamanan, pengelolaan) + fee sistem dipotong otomatis; sisa bersih masuk saldo vendor.</td></tr>
+  <tr><td>6</td><td>Konfigurasi Fee</td><td>Super Admin mengatur fee sistem &amp; komponen fee pengelola (bilangan bulat ≥0); berlaku prospektif + riwayat perubahan.</td></tr>
+  <tr><td>7</td><td>Limit Pengeluaran Harian</td><td>Orang Tua/Super Admin menetapkan batas harian per kartu; reset pukul 00:00; tanpa limit = tidak dibatasi.</td></tr>
+  <tr><td>8</td><td>Notifikasi Orang Tua</td><td>Notifikasi pembelian &amp; top up ≤60 detik; retry 3x jeda ≥30 detik; log status pengiriman.</td></tr>
+  <tr><td>9</td><td>Manajemen Produk Vendor</td><td>Vendor mengelola produk gerainya (nama, harga, tersedia/tidak); validasi; harga baru berlaku prospektif.</td></tr>
+  <tr><td>10</td><td>Laporan &amp; Ekspor</td><td>Laporan transaksi, pendapatan vendor, mutasi saldo dengan filter; ekspor CSV &amp; Excel ≤30 detik; akses sesuai peran.</td></tr>
+  <tr><td>11</td><td>Manajemen Pengguna &amp; Peran</td><td>Super Admin kelola akun 4 peran, asosiasi vendor–gerai, nonaktifkan akun, simpan audit log.</td></tr>
+  <tr><td>12</td><td>Keamanan &amp; Autentikasi</td><td>Login username+password, RBAC, kunci akun 15 menit setelah 5x gagal, timeout sesi 30 menit, hashing kata sandi.</td></tr>
+  <tr><td>13</td><td>Penarikan Dana Vendor [Tambahan]</td><td>Pencatatan penarikan/pencairan saldo vendor oleh Super Admin dengan bukti dan status.</td></tr>
+  <tr><td>14</td><td>Refund &amp; Koreksi Saldo [Tambahan]</td><td>Pembatalan transaksi dan koreksi saldo oleh Super Admin dengan otorisasi dan audit trail.</td></tr>
+  <tr><td>15</td><td>Cetak Kartu &amp; Operasional [Tambahan]</td><td>Cetak/ekspor barcode massal, dashboard ringkas orang tua, backup data harian.</td></tr>
+</table>
+
+<h2>2.3 Kebutuhan Hardware and Software</h2>
+<table>
+  <tr><th style="width:8%">No</th><th style="width:28%">Name</th><th>Description</th></tr>
+  <tr><td>1</td><td>Perangkat Pengguna</td><td>PC/laptop atau tablet dengan browser modern (Chrome/Edge/Firefox terbaru) untuk dashboard; smartphone Android/iOS untuk orang tua.</td></tr>
+  <tr><td>2</td><td>Barcode Scanner</td><td>Scanner barcode 1D (USB, mendukung Code-39/Code-128) di kasir sekolah dan tiap gerai vendor; mode keyboard-wedge.</td></tr>
+  <tr><td>3</td><td>Kartu Siswa Fisik</td><td>Kartu PVC dengan barcode 1D unik per siswa + nama/NIS; pencetakan massal didukung sistem.</td></tr>
+  <tr><td>4</td><td>Printer (Opsional)</td><td>Printer kartu PVC / printer thermal untuk struk top up tunai dan bukti transaksi.</td></tr>
+  <tr><td>5</td><td>Server / Hosting</td><td>Cloud VPS (min. 2 vCPU, 4 GB RAM) dengan HTTPS/TLS; database relasional (PostgreSQL/MySQL); backup harian otomatis.</td></tr>
+  <tr><td>6</td><td>Layanan Pihak Ketiga</td><td>Payment gateway (asumsi Midtrans/Xendit) untuk top up web; gateway notifikasi WhatsApp + fallback email.</td></tr>
+  <tr><td>7</td><td>Jaringan</td><td>Internet stabil di area kanteen (min. 10 Mbps); mode toleran-gangguan: transaksi kasir diprioritaskan ringan &lt;5 detik.</td></tr>
+</table>
+
+<h1>3. MODULE KARTU &amp; SALDO</h1>
+<table>
+  <tr><th style="width:30%">Module</th><th>Deskripsi</th></tr>
+  <tr><td>3.1 Pendaftaran Kartu</td><td>Input barcode unik per siswa; validasi duplikasi; tolak barcode ganda dengan pesan kesalahan. (Req 1)</td></tr>
+  <tr><td>3.2 Status Kartu</td><td>Aktif/nonaktif; kartu nonaktif otomatis ditolak saat transaksi. (Req 1)</td></tr>
+  <tr><td>3.3 Top Up Web</td><td>Form nominal + validasi minimum Super Admin; konfirmasi gateway; saldo masuk ≤30 detik; tampilkan saldo sebelum/sesudah; simpan riwayat. (Req 2)</td></tr>
+  <tr><td>3.4 Top Up Tunai</td><td>Hanya peran Kasir Sekolah; scan/input barcode → tampilkan siswa &amp; saldo; catat kasir pemroses, tanggal, nominal. (Req 3)</td></tr>
+  <tr><td>3.5 Riwayat Mutasi Saldo</td><td>Kronologi top up, pembelian, refund, koreksi per kartu; dapat difilter; hanya Super Admin (global) &amp; pemilik kartu. (Req 10)</td></tr>
+  <tr><td>3.6 Cetak Barcode Massal [Tambahan]</td><td>Generate dan ekspor barcode unik + template cetak kartu per kelas/angkatan; deteksi duplikat.</td></tr>
+</table>
+
+<h1>4. MODULE TRANSAKSI &amp; FEE</h1>
+<table>
+  <tr><th style="width:30%">Module</th><th>Deskripsi</th></tr>
+  <tr><td>4.1 Kasir Gerai (POS Ringan)</td><td>Scan barcode → tampilkan siswa, saldo, daftar produk tersedia gerai tersebut; keranjang + konfirmasi. (Req 4)</td></tr>
+  <tr><td>4.2 Validasi Transaksi</td><td>Cek saldo ≥ (belanja + fee pengelola + fee sistem) dan cek limit harian; tolak dengan pesan sisa saldo/limit; eksekusi atomik satu operasi DB; ≤5 detik. (Req 4, 7)</td></tr>
+  <tr><td>4.3 Fee &amp; Distribusi Otomatis</td><td>Hitung fee dari parameter aktif; potong dari saldo siswa; alokasikan bersih ke saldo vendor; simpan rincian fee per transaksi. (Req 5)</td></tr>
+  <tr><td>4.4 Konfigurasi Fee</td><td>Super Admin atur fee sistem (Rp/transaksi) + komponen fee pengelola (kebersihan, keamanan, pengelolaan); validasi integer ≥0; riwayat nilai lama/baru + pelaku + waktu. (Req 6)</td></tr>
+  <tr><td>4.5 Limit Harian</td><td>Orang Tua/Super Admin set limit Rp/hari; validasi akumulasi hari kalender; reset 00:00; kosong = unlimited. (Req 7)</td></tr>
+  <tr><td>4.6 Penarikan Dana Vendor [Tambahan]</td><td>Pengajuan dan persetujuan pencairan saldo vendor; status (diajukan/diselesaikan); bukti transfer; mengurangi saldo vendor.</td></tr>
+  <tr><td>4.7 Refund &amp; Koreksi [Tambahan]</td><td>Pembatalan transaksi oleh Super Admin (kembalikan bersih ke siswa, koreksi saldo vendor/fee); wajib alasan + audit log; tidak menghapus riwayat.</td></tr>
+</table>
+
+<h1>5. MODULE VENDOR &amp; PRODUK</h1>
+<table>
+  <tr><th style="width:30%">Module</th><th>Deskripsi</th></tr>
+  <tr><td>5.1 Manajemen Gerai</td><td>Super Admin mendaftarkan gerai dan mengasosiasikan satu/beberapa gerai ke akun vendor. (Req 11)</td></tr>
+  <tr><td>5.2 CRUD Produk Gerai</td><td>Vendor tambah/ubah produk gerainya: nama wajib isi, harga integer positif, status tersedia/tidak; produk tidak tersedia disembunyikan dari kasir. (Req 9)</td></tr>
+  <tr><td>5.3 Harga Prospektif</td><td>Perubahan harga hanya berlaku untuk transaksi setelah disimpan; riwayat transaksi menyimpan snapshot harga. (Req 9)</td></tr>
+  <tr><td>5.4 Katalog Kasir</td><td>Daftar produk tersedia per gerai untuk proses pembelian cepat (pencarian nama produk).</td></tr>
+</table>
+
+<h1>6. MODULE LAPORAN &amp; NOTIFIKASI</h1>
+<table>
+  <tr><th style="width:30%">Module</th><th>Deskripsi</th></tr>
+  <tr><td>6.1 Laporan Transaksi</td><td>Filter tanggal, siswa, vendor, status; Super Admin ≤10 detik; ekspor CSV &amp; Excel (.xlsx) ≤30 detik. (Req 10)</td></tr>
+  <tr><td>6.2 Laporan Pendapatan Vendor</td><td>Per gerai per periode: total penjualan, total fee pengelola, total fee sistem, dana bersih; vendor hanya melihat gerainya tanpa fee sistem gerai lain. (Req 10)</td></tr>
+  <tr><td>6.3 Laporan Saldo &amp; Fee</td><td>Mutasi per kartu; rekap fee pengelola &amp; fee sistem per periode untuk rekonsiliasi sekolah/platform. (Req 5, 10)</td></tr>
+  <tr><td>6.4 Notifikasi Transaksi</td><td>Kirim ke orang tua ≤60 detik berisi siswa, gerai, item, total, saldo akhir; notifikasi top up; retry 3x jeda ≥30 detik; log status/waktu/saluran. (Req 8)</td></tr>
+  <tr><td>6.5 Dashboard Orang Tua [Tambahan]</td><td>Ringkasan saldo, pengeluaran hari ini vs limit, 10 transaksi terakhir, tombol top up cepat.</td></tr>
+</table>
+
+<h1>7. MODULE PENGGUNA &amp; KEAMANAN</h1>
+<table>
+  <tr><th style="width:30%">Module</th><th>Deskripsi</th></tr>
+  <tr><td>7.1 Manajemen Pengguna</td><td>Super Admin tambah/ubah/nonaktifkan akun; 4 peran; akun nonaktif ditolak login dengan pesan. (Req 11)</td></tr>
+  <tr><td>7.2 Autentikasi &amp; Sesi</td><td>Username + password wajib; kunci 15 menit setelah 5x gagal; tampilkan estimasi buka; timeout sesi 30 menit idle; hashing aman. (Req 12)</td></tr>
+  <tr><td>7.3 Otorisasi Berbasis Peran</td><td>Setiap fitur/data dibatasi per peran (mis. top up tunai hanya kasir; konfigurasi fee hanya Super Admin). (Req 12)</td></tr>
+  <tr><td>7.4 Audit Log [Tambahan]</td><td>Catat perubahan akun, fee, limit, refund, penarikan: siapa, kapan, nilai lama/baru. (Req 6, 11)</td></tr>
+  <tr><td>7.5 Backup &amp; Retensi [Tambahan]</td><td>Backup DB harian otomatis; retensi log transaksi &amp; notifikasi min. 1 tahun ajaran; ekspor arsip.</td></tr>
+</table>
+
+<h1>8. DIAGRAM</h1>
+
+<h2>01 Architecture</h2>
+<div class="diagram-box">
+<svg viewBox="0 0 720 340" role="img" aria-labelledby="arch-title arch-desc" xmlns="http://www.w3.org/2000/svg">
+<title id="arch-title">Arsitektur Sistem e-Kanteen</title><desc id="arch-desc">Komponen web dashboard, API, database, gateway pembayaran dan notifikasi.</desc>
+<rect x="0" y="0" width="720" height="340" fill="#ffffff"/>
+<text x="20" y="28" font-family="Arial,sans-serif" font-size="12" font-weight="bold" fill="#1a5276">ARSITEKTUR SISTEM E-KANTEEN</text>
+<rect x="20" y="50" width="150" height="70" rx="6" fill="#eaf2f8" stroke="#1a5276"/><text x="95" y="78" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" font-weight="bold">Web Dashboard</text><text x="95" y="96" text-anchor="middle" font-family="Arial,sans-serif" font-size="9">Ortu/Siswa/Vendor</text><text x="95" y="110" text-anchor="middle" font-family="Arial,sans-serif" font-size="9">Kasir/Admin</text>
+<rect x="20" y="140" width="150" height="60" rx="6" fill="#eaf2f8" stroke="#1a5276"/><text x="95" y="164" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" font-weight="bold">Kasir Gerai (POS)</text><text x="95" y="182" text-anchor="middle" font-family="Arial,sans-serif" font-size="9">Scan barcode</text>
+<rect x="230" y="80" width="150" height="90" rx="6" fill="#fef9e7" stroke="#b7950b"/><text x="305" y="108" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" font-weight="bold">API Aplikasi</text><text x="305" y="126" text-anchor="middle" font-family="Arial,sans-serif" font-size="9">Auth + RBAC + Validasi</text><text x="305" y="140" text-anchor="middle" font-family="Arial,sans-serif" font-size="9">Transaksi atomik</text>
+<rect x="430" y="80" width="130" height="90" rx="6" fill="#eafaf1" stroke="#1e8449"/><text x="495" y="108" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" font-weight="bold">Database</text><text x="495" y="126" text-anchor="middle" font-family="Arial,sans-serif" font-size="9">Kartu, Saldo,</text><text x="495" y="140" text-anchor="middle" font-family="Arial,sans-serif" font-size="9">Transaksi, Fee</text>
+<rect x="430" y="200" width="130" height="70" rx="6" fill="#f4ecf7" stroke="#6c3483"/><text x="495" y="226" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" font-weight="bold">Payment Gateway</text><text x="495" y="244" text-anchor="middle" font-family="Arial,sans-serif" font-size="9">Midtrans / Xendit</text>
+<rect x="230" y="200" width="150" height="70" rx="6" fill="#f4ecf7" stroke="#6c3483"/><text x="305" y="226" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" font-weight="bold">Notifikasi WA</text><text x="305" y="244" text-anchor="middle" font-family="Arial,sans-serif" font-size="9">Retry 3x + log</text>
+<line x1="170" y1="85" x2="230" y2="110" stroke="#1a5276" stroke-width="1.5" marker-end="url(#a1)"/>
+<line x1="170" y1="170" x2="230" y2="140" stroke="#1a5276" stroke-width="1.5"/>
+<line x1="380" y1="125" x2="430" y2="125" stroke="#1a5276" stroke-width="1.5"/>
+<line x1="305" y1="170" x2="305" y2="200" stroke="#6c3483" stroke-width="1.5" stroke-dasharray="5,4"/>
+<line x1="380" y1="235" x2="430" y2="235" stroke="#6c3483" stroke-width="1.5" stroke-dasharray="5,4"/>
+<defs><marker id="a1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><polygon points="0 0, 8 4, 0 8" fill="#1a5276"/></marker></defs>
+<text x="20" y="310" font-family="Arial,sans-serif" font-size="9" fill="#555">HTTPS/TLS di semua kanal. Timeout sesi 30 mnt. Backup DB harian.</text>
+</svg>
+</div>
+
+<h2>02 Flowchart</h2>
+<div class="diagram-box">
+<svg viewBox="0 0 720 460" role="img" aria-labelledby="fl-title fl-desc" xmlns="http://www.w3.org/2000/svg">
+<title id="fl-title">Alur Fungsional Umum</title><desc id="fl-desc">Alur registrasi kartu, top up, pembelian, fee, notifikasi, laporan.</desc>
+<rect x="0" y="0" width="720" height="460" fill="#ffffff"/>
+<text x="20" y="28" font-family="Arial,sans-serif" font-size="12" font-weight="bold" fill="#1a5276">FLOWCHART FUNGSIONAL UMUM</text>
+<g font-family="Arial,sans-serif" font-size="10" text-anchor="middle">
+<rect x="250" y="45" width="220" height="40" rx="20" fill="#eaf2f8" stroke="#1a5276"/><text x="360" y="69">Mulai: Kartu didaftarkan</text>
+<rect x="250" y="100" width="220" height="40" rx="6" fill="#fff" stroke="#1a5276"/><text x="360" y="124">Top Up (Web / Tunai)</text>
+<rect x="250" y="155" width="220" height="40" rx="6" fill="#fff" stroke="#1a5276"/><text x="360" y="172">Scan barcode di gerai</text><text x="360" y="186">Cek saldo + limit</text>
+<rect x="250" y="210" width="220" height="44" rx="6" fill="#fef9e7" stroke="#b7950b"/><text x="360" y="228">Saldo cukup &amp; di bawah limit?</text><text x="360" y="242">Ya / Tidak</text>
+<rect x="40" y="270" width="200" height="40" rx="6" fill="#fadbd8" stroke="#943126"/><text x="140" y="294">Tolak + pesan sisa/limit</text>
+<rect x="280" y="270" width="160" height="40" rx="6" fill="#eafaf1" stroke="#1e8449"/><text x="360" y="294">Potong atomik + fee</text>
+<rect x="480" y="270" width="200" height="40" rx="6" fill="#fff" stroke="#1a5276"/><text x="580" y="294">Distribusi ke vendor</text>
+<rect x="280" y="325" width="160" height="40" rx="6" fill="#fff" stroke="#1a5276"/><text x="360" y="349">Notifikasi orang tua</text>
+<rect x="280" y="380" width="160" height="40" rx="6" fill="#fff" stroke="#1a5276"/><text x="360" y="404">Laporan + ekspor</text>
+</g>
+<g stroke="#1a5276" stroke-width="1.5" fill="none">
+<line x1="360" y1="85" x2="360" y2="100"/><line x1="360" y1="140" x2="360" y2="155"/><line x1="360" y1="195" x2="360" y2="210"/>
+<line x1="250" y1="232" x2="140" y2="270"/><line x1="360" y1="254" x2="360" y2="270"/><line x1="470" y1="232" x2="580" y2="270"/>
+<line x1="360" y1="310" x2="360" y2="325"/><line x1="360" y1="365" x2="360" y2="380"/>
+</g>
+</svg>
+</div>
+
+<h2>03 Process</h2>
+<div class="diagram-box">
+<svg viewBox="0 0 720 360" role="img" aria-labelledby="pr-title pr-desc" xmlns="http://www.w3.org/2000/svg">
+<title id="pr-title">Proses Multi-Aktor</title><desc id="pr-desc">Tahapan proses antar orang tua, kasir, vendor, sistem, dan admin.</desc>
+<rect x="0" y="0" width="720" height="360" fill="#ffffff"/>
+<text x="20" y="28" font-family="Arial,sans-serif" font-size="12" font-weight="bold" fill="#1a5276">PROSES MULTI-AKTOR &amp; SERAH TERIMA DATA</text>
+<g font-family="Arial,sans-serif" font-size="9">
+<rect x="20" y="50" width="660" height="42" fill="#eaf2f8" stroke="#1a5276"/><text x="30" y="66" font-weight="bold">1. ORANG TUA</text><text x="30" y="80">Top up web + set limit harian → data: nominal, limit, kartu tujuan</text>
+<rect x="20" y="100" width="660" height="42" fill="#fef9e7" stroke="#b7950b"/><text x="30" y="116" font-weight="bold">2. KASIR SEKOLAH</text><text x="30" y="130">Top up tunai → data: barcode, nominal, identitas kasir</text>
+<rect x="20" y="150" width="660" height="42" fill="#eafaf1" stroke="#1e8449"/><text x="30" y="166" font-weight="bold">3. SISWA + KASIR GERAI</text><text x="30" y="180">Scan barcode + pilih produk → data: keranjang, total</text>
+<rect x="20" y="200" width="660" height="42" fill="#f4ecf7" stroke="#6c3483"/><text x="30" y="216" font-weight="bold">4. SISTEM</text><text x="30" y="230">Validasi saldo/limit → potong atomik → bagi fee → notifikasi</text>
+<rect x="20" y="250" width="660" height="42" fill="#f2f3f4" stroke="#555"/><text x="30" y="266" font-weight="bold">5. VENDOR &amp; SUPER ADMIN</text><text x="30" y="280">Vendor terima bersih + tarik dana; Admin laporan, ekspor, audit</text>
+</g>
+<text x="20" y="320" font-family="Arial,sans-serif" font-size="9" fill="#555">Serah terima data dicatat di setiap tahap (waktu, pelaku, nominal, saldo akhir).</text>
+</svg>
+</div>
+
+<h2>04 High-Level</h2>
+<div class="diagram-box">
+<svg viewBox="0 0 720 300" role="img" aria-labelledby="hl-title hl-desc" xmlns="http://www.w3.org/2000/svg">
+<title id="hl-title">Tampilan High Level</title><desc id="hl-desc">Tahapan sumber, klaster aplikasi, dan concern lintas lapis.</desc>
+<rect x="0" y="0" width="720" height="300" fill="#ffffff"/>
+<text x="20" y="28" font-family="Arial,sans-serif" font-size="12" font-weight="bold" fill="#1a5276">HIGH-LEVEL END-TO-END STACK</text>
+<g font-family="Arial,sans-serif" font-size="10" text-anchor="middle">
+<polygon points="20,60 170,60 155,110 20,110" fill="#eaf2f8" stroke="#1a5276"/><text x="90" y="82">Sumber</text><text x="90" y="96" font-size="8">Kartu, Web, Kasir</text>
+<polygon points="175,60 325,60 310,110 160,110" fill="#fef9e7" stroke="#b7950b"/><text x="240" y="82">Transaksi</text><text x="240" y="96" font-size="8">POS + Top Up</text>
+<polygon points="330,60 480,60 465,110 315,110" fill="#eafaf1" stroke="#1e8449"/><text x="395" y="82">Dana &amp; Fee</text><text x="395" y="96" font-size="8">Split otomatis</text>
+<polygon points="485,60 635,60 620,110 470,110" fill="#f4ecf7" stroke="#6c3483"/><text x="550" y="82">Info</text><text x="550" y="96" font-size="8">Notif + Laporan</text>
+<rect x="20" y="140" width="615" height="50" rx="6" fill="#f2f3f4" stroke="#555"/><text x="327" y="160">Klaster Aplikasi: API + Database + Audit Log + Backup Harian</text><text x="327" y="176" font-size="8">Cross-cutting: Auth/RBAC, Enkripsi, Timeout 30 mnt, Lock 5x/15 mnt</text>
+</g>
+</svg>
+</div>
+
+<h2>05 ER</h2>
+<div class="diagram-box">
+<svg viewBox="0 0 720 360" role="img" aria-labelledby="er-title er-desc" xmlns="http://www.w3.org/2000/svg">
+<title id="er-title">Model Data</title><desc id="er-desc">Entitas siswa, kartu, transaksi, vendor, produk, dan fee.</desc>
+<rect x="0" y="0" width="720" height="360" fill="#ffffff"/>
+<text x="20" y="28" font-family="Arial,sans-serif" font-size="12" font-weight="bold" fill="#1a5276">MODEL DATA (ER)</text>
+<g font-family="Arial,sans-serif" font-size="9">
+<rect x="20" y="50" width="150" height="90" fill="#eaf2f8" stroke="#1a5276"/><text x="30" y="68" font-weight="bold">SISWA</text><text x="30" y="84">- id, nama, NIS</text><text x="30" y="98">- id_orang_tua</text><text x="30" y="112">- limit_harian</text>
+<rect x="200" y="50" width="150" height="90" fill="#eaf2f8" stroke="#1a5276"/><text x="210" y="68" font-weight="bold">KARTU</text><text x="210" y="84">- barcode (UK)</text><text x="210" y="98">- id_siswa (FK)</text><text x="210" y="112">- saldo, status</text>
+<rect x="380" y="50" width="150" height="90" fill="#fef9e7" stroke="#b7950b"/><text x="390" y="68" font-weight="bold">TRANSAKSI</text><text x="390" y="84">- id, waktu, jenis</text><text x="390" y="98">- total, fee_kelola</text><text x="390" y="112">- fee_sistem, bersih</text>
+<rect x="200" y="170" width="150" height="90" fill="#eafaf1" stroke="#1e8449"/><text x="210" y="188" font-weight="bold">VENDOR/GERAI</text><text x="210" y="204">- id_vendor, gerai</text><text x="210" y="218">- saldo_vendor</text><text x="210" y="232">- status</text>
+<rect x="380" y="170" width="150" height="90" fill="#eafaf1" stroke="#1e8449"/><text x="390" y="188" font-weight="bold">PRODUK</text><text x="390" y="204">- id, id_gerai (FK)</text><text x="390" y="218">- nama, harga</text><text x="390" y="232">- tersedia?</text>
+<rect x="20" y="170" width="150" height="90" fill="#f2f3f4" stroke="#555"/><text x="30" y="188" font-weight="bold">PENGGUNA</text><text x="30" y="204">- id, peran, hash</text><text x="30" y="218">- status, lock</text><text x="30" y="232">- audit_log</text>
+</g>
+<g stroke="#555" stroke-width="1.2">
+<line x1="170" y1="95" x2="200" y2="95"/><line x1="350" y1="95" x2="380" y2="95"/><line x1="275" y1="140" x2="275" y2="170"/><line x1="380" y1="215" x2="380" y2="215"/>
+<line x1="95" y1="140" x2="95" y2="170"/>
+</g>
+<text x="20" y="290" font-family="Arial,sans-serif" font-size="9" fill="#333">Relasi: 1 Siswa–1 Kartu aktif; 1 Transaksi → 1 Siswa + 1 Gerai + N Item; 1 Vendor → N Gerai → N Produk; Fee tersimpan per transaksi (snapshot).</text>
+<text x="20" y="310" font-family="Arial,sans-serif" font-size="9" fill="#333">Tambahan: PENARIKAN_DANA (id_vendor, nominal, status, bukti), NOTIFIKASI_LOG (waktu, saluran, status, retry).</text>
+</svg>
+</div>
+
+<h2>06 Timeline</h2>
+<div class="diagram-box">
+<svg viewBox="0 0 720 280" role="img" aria-labelledby="tl-title tl-desc" xmlns="http://www.w3.org/2000/svg">
+<title id="tl-title">Timeline Implementasi</title><desc id="tl-desc">Tahapan implementasi dari fondasi hingga Go-Live.</desc>
+<rect x="0" y="0" width="720" height="280" fill="#ffffff"/>
+<text x="20" y="28" font-family="Arial,sans-serif" font-size="12" font-weight="bold" fill="#1a5276">TIMELINE IMPLEMENTASI</text>
+<line x1="20" y1="120" x2="700" y2="120" stroke="#1a5276" stroke-width="2"/>
+<g font-family="Arial,sans-serif" font-size="9" text-anchor="middle">
+<circle cx="60" cy="120" r="8" fill="#1a5276"/><text x="60" y="95" font-weight="bold">Fase 1</text><text x="60" y="150">Fondasi: auth,</text><text x="60" y="163">kartu, user</text><text x="60" y="176">Minggu 1–2</text>
+<circle cx="210" cy="120" r="8" fill="#1a5276"/><text x="210" y="95" font-weight="bold">Fase 2</text><text x="210" y="150">Top up + POS</text><text x="210" y="163">Minggu 3–4</text>
+<circle cx="360" cy="120" r="8" fill="#b7950b"/><text x="360" y="95" font-weight="bold">Fase 3</text><text x="360" y="150">Fee, limit,</text><text x="360" y="163">notifikasi</text><text x="360" y="176">Minggu 5–6</text>
+<circle cx="510" cy="120" r="8" fill="#1e8449"/><text x="510" y="95" font-weight="bold">Fase 4</text><text x="510" y="150">Laporan,</text><text x="510" y="163">ekspor, produk</text><text x="510" y="176">Minggu 7–8</text>
+<circle cx="650" cy="120" r="8" fill="#6c3483"/><text x="650" y="95" font-weight="bold">Fase 5</text><text x="650" y="150">UAT + Go-Live</text><text x="650" y="163">Minggu 9–10</text>
+</g>
+</svg>
+</div>
+
+<div class="note">
+<strong>Asumsi &amp; yang perlu dilengkapi (untuk direvisi bila berbeda):</strong>
+<ol>
+<li>Payment gateway top up web: <strong>Midtrans/Xendit</strong> (belum Anda tentukan — dipilih standar). Minimum top up <strong>Rp10.000</strong>, dapat diubah Super Admin.</li>
+<li>Channel notifikasi utama: <strong>WhatsApp gateway</strong> + fallback email; retry 3x jeda ≥30 detik sesuai Req 8.</li>
+<li>Default fee: <strong>Fee Sistem Rp500/transaksi</strong>; komponen Fee Pengelola (kebersihan, keamanan, pengelolaan) default Rp0 dan diatur sekolah.</li>
+<li>Peran kasir gerai dianggap bagian dari akun Vendor (operator gerai); bila perlu akun terpisah, tambahkan peran Kasir Vendor.</li>
+<li>Tambahan pada dokumen ini (modul 3.6, 4.6, 4.7, 6.5, 7.4, 7.5) adalah usulan agar sistem siap operasi — hapus bila ingin strict 12 requirement saja.</li>
+<li>Estimasi timeline 10 minggu dan spek hardware pada §2.3 adalah asumsi standar sekolah — sesuaikan dengan hasil survei lapangan.</li>
+</ol>
+</div>
+
+</body>
+</html>
