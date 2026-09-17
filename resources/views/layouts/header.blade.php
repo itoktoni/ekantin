@@ -1,5 +1,5 @@
 {{-- Header --}}
-<header class="fixed top-0 w-full z-50 bg-surface-container-lowest shadow-sm border-b border-outline-variant flex items-center justify-between px-3 md:px-8 h-16">
+<header class="fixed top-0 w-full z-50 bg-surface-container-lowest shadow-sm border-b border-outline-variant rounded-b-2xl md:rounded-none flex items-center justify-between px-3 md:px-8 h-16">
     <div class="flex min-w-0 items-center gap-2 md:gap-4">
         <button type="button" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-surface-container transition-colors md:hidden" aria-label="Open navigation menu" @click="drawerOpen = !drawerOpen">
             <span class="material-symbols-outlined text-[22px] text-on-surface-variant">menu</span>

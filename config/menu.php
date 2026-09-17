@@ -84,11 +84,11 @@ return [
 
     'bottom_nav' => [
 
-        ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Left'],
-        ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Kiri'],
         ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Home'],
-        ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Kanan'],
-        ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Right'],
+        ['route' => 'transaksi.getTable', 'icon' => 'receipt_long', 'label' => 'Transaksi'],
+        ['route' => 'kasir.pos', 'icon' => 'point_of_sale', 'label' => 'Kasir'],
+        ['route' => 'laporan.index', 'icon' => 'assessment', 'label' => 'Laporan'],
+        ['route' => 'user.getTable', 'icon' => 'manage_accounts', 'label' => 'Users'],
 
     ],
 

@@ -29,6 +29,13 @@
             ['route' => 'laporan.index', 'icon' => 'assessment', 'label' => 'Laporan'],
             ['route' => 'topup.web', 'icon' => 'account_balance_wallet', 'label' => 'TopUp'],
         ],
+        'admin', 'super_admin', 'developer', 'editor', 'user' => [
+            ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Home'],
+            ['route' => 'transaksi.getTable', 'icon' => 'receipt_long', 'label' => 'Transaksi'],
+            ['route' => 'kasir.pos', 'icon' => 'point_of_sale', 'label' => 'Kasir'],
+            ['route' => 'laporan.index', 'icon' => 'assessment', 'label' => 'Laporan'],
+            ['route' => 'user.getTable', 'icon' => 'manage_accounts', 'label' => 'Users'],
+        ],
         default => config('menu.bottom_nav'),
     };
 @endphp
