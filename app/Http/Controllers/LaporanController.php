@@ -76,8 +76,8 @@ class LaporanController extends Controller
 
         return [
             'total' => (int) $rows->sum('transaksi_total'),
-            'fee_kelola' => (int) $rows->sum(fn ($r) => (int) $r->transaksi_fee_kebersihan + (int) $r->transaksi_fee_keamanan + (int) $r->transaksi_fee_pengelolaan),
-            'fee_sistem' => (int) $rows->sum('transaksi_fee_sistem'),
+            'fee_kelola' => (int) $rows->sum(fn ($r) => $r->feeTotal()),
+            'fee_sistem' => 0,
             'bersih' => (int) $rows->sum('transaksi_bersih'),
             'jumlah' => $rows->count(),
         ];
@@ -136,8 +136,8 @@ class LaporanController extends Controller
                     $this->namaGerai($r),
                     $r->transaksi_jenis,
                     $r->transaksi_total,
-                    (int) $r->transaksi_fee_kebersihan + (int) $r->transaksi_fee_keamanan + (int) $r->transaksi_fee_pengelolaan,
-                    $r->transaksi_fee_sistem,
+                    $r->feeTotal(),
+                    0,
                     $r->transaksi_bersih,
                     $r->transaksi_saldo_akhir,
                     $r->transaksi_status,

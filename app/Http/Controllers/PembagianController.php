@@ -18,6 +18,28 @@ class PembagianController extends Controller
         $this->model = $model::getModel();
     }
 
+    // Pembagian adalah snapshot hasil hitungan (postBagi) — tidak ada form create/update
+    // (pages.pembagian.form memang tidak ada by design). Guard backend agar URL langsung 404.
+    public function getCreate(GeneralRequest $request)
+    {
+        abort(404);
+    }
+
+    public function postCreate(GeneralRequest $request)
+    {
+        abort(404);
+    }
+
+    public function getUpdate(GeneralRequest $request, $id)
+    {
+        abort(404);
+    }
+
+    public function postUpdate(GeneralRequest $request, $id)
+    {
+        abort(404);
+    }
+
     protected function getData()
     {
         $q = $this->model->leftJoinRelationship('hasGerai')->filter()->sort();
@@ -48,7 +70,7 @@ class PembagianController extends Controller
                 ->sum('transaksi_item.item_subtotal');
             $feeHarian = Transaksi::whereDate('created_at', $tanggal)->where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')
                 ->where(function ($q) use ($g) { $q->where('transaksi_id_gerai', $g->gerai_id)->orWhereHas('hasItems', fn($qq) => $qq->where('item_id_gerai', $g->gerai_id)); })
-                ->get()->sum(fn($t) => (int)$t->transaksi_fee_kebersihan + (int)$t->transaksi_fee_keamanan + (int)$t->transaksi_fee_pengelolaan + (int)$t->transaksi_fee_sistem);
+                ->get()->sum(fn($t) => $t->feeTotal());
             $totalSubHarian = DB::table('transaksi_item')->join('transaksi', 'transaksi.transaksi_id', '=', 'transaksi_item.item_id_transaksi')
                 ->whereDate('transaksi.created_at', $tanggal)->where('transaksi.transaksi_jenis', 'beli')->where('transaksi.transaksi_status', 'berhasil')->sum('transaksi_item.item_subtotal');
             $feeGerai = $totalSubHarian > 0 ? (int) round($feeHarian * ($total / max($totalSubHarian, 1))) : 0;
@@ -91,7 +113,7 @@ class PembagianController extends Controller
             ->sum('transaksi_item.item_subtotal');
         $feeHarian = Transaksi::whereDate('created_at', $tanggal)->where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')
             ->where(function ($q) use ($gerai) { $q->where('transaksi_id_gerai', $gerai->gerai_id)->orWhereHas('hasItems', fn($qq) => $qq->where('item_id_gerai', $gerai->gerai_id)); })
-            ->get()->sum(fn($t) => (int)$t->transaksi_fee_kebersihan + (int)$t->transaksi_fee_keamanan + (int)$t->transaksi_fee_pengelolaan + (int)$t->transaksi_fee_sistem);
+            ->get()->sum(fn($t) => $t->feeTotal());
         $totalSubHarian = DB::table('transaksi_item')->join('transaksi', 'transaksi.transaksi_id', '=', 'transaksi_item.item_id_transaksi')
             ->whereDate('transaksi.created_at', $tanggal)->where('transaksi.transaksi_jenis', 'beli')->where('transaksi.transaksi_status', 'berhasil')->sum('transaksi_item.item_subtotal');
         $feeGerai = $totalSubHarian > 0 ? (int) round($feeHarian * ($total / max($totalSubHarian, 1))) : 0;

@@ -25,6 +25,15 @@
         <form id="posForm" action="{{ route('kasir.postPos') }}" method="POST">
             @csrf
             <input type="hidden" name="idempotency" value="{{ $idempotency }}">
+            <input type="hidden" name="metode" id="metodeInput" value="kartu">
+            <div class="mb-2.5 flex gap-1.5" role="group" aria-label="Mode pembeli">
+                <button type="button" id="modeKartu" class="chip" aria-pressed="true">
+                    <span class="material-symbols-outlined">badge</span> Kartu siswa
+                </button>
+                <button type="button" id="modeWalkin" class="chip" aria-pressed="false">
+                    <span class="material-symbols-outlined">person</span> Walk-in
+                </button>
+            </div>
 
             {{-- ① Kartu siswa + cari produk --}}
             <div class="grid gap-2.5 md:grid-cols-2">
@@ -36,6 +45,17 @@
                     <input id="kartu_barcode" type="text" name="kartu_barcode" required autofocus autocomplete="off"
                         enterkeyhint="next" placeholder="SW-1001"
                         class="mt-2 h-12 w-full rounded-lg border border-outline-variant bg-white px-3 font-data-mono text-base text-on-surface outline-none placeholder:text-on-surface-variant/50 focus:border-primary focus:ring-1 focus:ring-primary">
+                    <div class="mt-2 flex gap-1.5">
+                        <button type="button" id="cariKartuBtn" class="inline-flex h-11 items-center gap-1 rounded-lg border border-outline-variant px-3 text-[13px] font-semibold text-on-surface hover:border-primary hover:text-primary">
+                            <span class="material-symbols-outlined text-[18px]">person_search</span> Cari siswa
+                        </button>
+                        <span id="kartuTerpilih" class="hidden min-w-0 flex-1 truncate self-center text-[13px] font-semibold text-primary"></span>
+                    </div>
+                    <div id="hasilKartu" class="mt-2 hidden max-h-56 space-y-1 overflow-y-auto"></div>
+                    <div id="walkinBox" class="mt-2 hidden gap-1.5" role="group" aria-label="Metode bayar walk-in">
+                        <label class="chip cursor-pointer"><input type="radio" name="metode_bayar" value="tunai" class="sr-only"> Tunai</label>
+                        <label class="chip cursor-pointer"><input type="radio" name="metode_bayar" value="qris" class="sr-only"> QRIS</label>
+                    </div>
                     @error('kartu_barcode')
                     <p class="mt-1.5 flex items-center gap-1 text-xs text-error">
                         <span class="material-symbols-outlined text-[14px]">error</span>{{ $message }}
@@ -182,6 +202,18 @@
         </form>
     </div>
 
+    @if(isset($fees) && $fees->isNotEmpty())
+    <div class="mt-3 rounded-xl border border-outline-variant bg-surface-container-lowest p-3">
+        <p class="text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Fee penjualan (otomatis dari subtotal)</p>
+        <div class="mt-1.5 flex flex-wrap gap-1.5">
+            @foreach($fees as $f)
+            <span class="inline-flex items-center gap-1 rounded-full bg-surface-container px-2.5 py-1 text-[11px] font-semibold text-on-surface">Fee {{ $f->nama_fee }} ({{ rtrim(rtrim(number_format((float)$f->value_fee,2,',','.'),'0'),',') }}%)</span>
+            @endforeach
+        </div>
+        <p class="mt-1.5 text-[11px] text-on-surface-variant">Nominal dihitung saat bayar: subtotal × persen, dibulatkan per jenis. Total fee + subtotal = potong saldo.</p>
+    </div>
+    @endif
+
     {{-- ⑥ Dock keranjang --}}
     <div class="fixed inset-x-0 bottom-16 z-40 border-t border-outline-variant bg-surface-container-lowest shadow-[0_-4px_12px_rgba(0,0,0,0.08)] md:bottom-0 md:left-72"
         style="padding-bottom: env(safe-area-inset-bottom)">
@@ -197,6 +229,7 @@
                     <span id="cartKantin" class="font-bold text-on-surface">0</span> kantin
                 </p>
                 <p id="cartTotal" class="mt-1 font-data-mono text-lg font-bold leading-none text-on-surface">Rp0</p>
+                <p id="cartFee" class="mt-0.5 text-[11px] font-mono text-on-surface-variant">Fee Rp0 • Potong Rp0</p>
             </div>
             <button type="submit" form="posForm" id="bayarBtn" disabled
                 class="inline-flex h-12 shrink-0 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-bold text-on-primary hover:bg-primary-container disabled:opacity-40">
@@ -218,7 +251,9 @@
         const cartCount = document.getElementById('cartCount');
         const cartKantin = document.getElementById('cartKantin');
         const cartTotal = document.getElementById('cartTotal');
+        const cartFee = document.getElementById('cartFee');
         const bayarBtn = document.getElementById('bayarBtn');
+        const feePersen = @json(isset($fees) ? $fees->pluck('value_fee', 'code_fee') : []);
 
         let filterKategori = 'semua';
         let filterGerai = 'semua';
@@ -255,6 +290,9 @@
             cartCount.textContent = jumlah;
             cartKantin.textContent = geraiTerpilih.size;
             cartTotal.textContent = fmt(total);
+            let feeTotal = 0;
+            Object.values(feePersen).forEach((p) => { feeTotal += Math.round(total * parseFloat(p) / 100); });
+            if (cartFee) cartFee.textContent = 'Fee ' + fmt(feeTotal) + ' • Potong ' + fmt(total + feeTotal);
             bayarBtn.disabled = jumlah === 0;
         }
 
@@ -361,13 +399,71 @@
             });
         }
 
-        form.addEventListener('submit', (e) => {
-            const barcode = document.getElementById('kartu_barcode');
-            if (barcode && !barcode.value.trim()) {
-                e.preventDefault();
-                barcode.focus();
-                barcode.classList.add('border-error');
+        const metodeInput = document.getElementById('metodeInput');
+        const kartuInput = document.getElementById('kartu_barcode');
+        const walkinBox = document.getElementById('walkinBox');
+        const hasilKartu = document.getElementById('hasilKartu');
+        const kartuTerpilih = document.getElementById('kartuTerpilih');
+        let mode = 'kartu';
+
+        function setMode(m) {
+            mode = m;
+            metodeInput.value = m === 'walkin' ? (document.querySelector('input[name="metode_bayar"]:checked')?.value || 'tunai') : 'kartu';
+            document.getElementById('modeKartu').setAttribute('aria-pressed', String(m === 'kartu'));
+            document.getElementById('modeWalkin').setAttribute('aria-pressed', String(m === 'walkin'));
+            kartuInput.required = m === 'kartu';
+            kartuInput.closest('div.rounded-xl').classList.toggle('hidden', m === 'walkin');
+            walkinBox.classList.toggle('hidden', m === 'kartu');
+            walkinBox.classList.toggle('flex', m === 'walkin');
+        }
+        document.getElementById('modeKartu').addEventListener('click', () => setMode('kartu'));
+        document.getElementById('modeWalkin').addEventListener('click', () => setMode('walkin'));
+        walkinBox.addEventListener('change', () => {
+            metodeInput.value = document.querySelector('input[name="metode_bayar"]:checked')?.value || 'tunai';
+        });
+
+        document.getElementById('cariKartuBtn').addEventListener('click', async () => {
+            const q = kartuInput.value.trim();
+            if (q.length < 2) { kartuInput.focus(); return; }
+            const res = await fetch('{{ route('kartu.getSearch') }}?q=' + encodeURIComponent(q), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const rows = await res.json();
+            hasilKartu.innerHTML = '';
+            hasilKartu.classList.remove('hidden');
+            if (!rows.length) {
+                hasilKartu.innerHTML = '<p class="p-2 text-[13px] text-on-surface-variant">Tidak ketemu.</p>';
                 return;
+            }
+            rows.forEach((r) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'flex w-full items-center justify-between gap-2 rounded-lg border border-outline-variant px-3 py-2 text-left hover:border-primary';
+                b.innerHTML = "<span class='min-w-0'><span class='block truncate text-[13px] font-bold'>" + r.nama + "</span><span class='block font-data-mono text-[11px] text-on-surface-variant'>" + r.barcode + (r.nis ? ' • ' + r.nis : '') + "</span></span><span class='font-data-mono text-[12px] font-bold text-primary'>Rp" + r.saldo.toLocaleString('id-ID') + '</span>';
+                b.addEventListener('click', () => {
+                    kartuInput.value = r.barcode;
+                    kartuTerpilih.textContent = r.nama + ' • Rp' + r.saldo.toLocaleString('id-ID');
+                    kartuTerpilih.classList.remove('hidden');
+                    hasilKartu.classList.add('hidden');
+                });
+                hasilKartu.appendChild(b);
+            });
+        });
+
+        form.addEventListener('submit', (e) => {
+            if (mode === 'kartu') {
+                const barcode = document.getElementById('kartu_barcode');
+                if (barcode && !barcode.value.trim()) {
+                    e.preventDefault();
+                    barcode.focus();
+                    barcode.classList.add('border-error');
+                    return;
+                }
+            } else {
+                const bayar = document.querySelector('input[name="metode_bayar"]:checked');
+                if (!bayar) {
+                    e.preventDefault();
+                    return;
+                }
+                metodeInput.value = bayar.value;
             }
             bayarBtn.disabled = true;
         });

@@ -126,6 +126,36 @@
                             <td></td>
                         </tr>
                     </x-slot:body>
+                    <x-slot:mobile>
+                        <div class="p-3 space-y-3">
+                            @foreach ($model->hasItems as $item)
+                            <div class="border border-outline-variant rounded-xl p-4 bg-surface-container-lowest shadow-sm">
+                                <p class="text-sm font-bold text-on-surface truncate mb-3">{{ $item->item_qty }}x {{ $item->item_nama }}</p>
+                                <div class="grid grid-cols-2 gap-3 mb-3">
+                                    <div>
+                                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Gerai</p>
+                                        <p class="text-xs font-medium text-on-surface truncate">{{ $item->hasGerai?->gerai_nama ?? '-' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Status</p>
+                                        <p class="text-xs font-medium text-primary truncate">{{ $item->item_status }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Harga</p>
+                                        <p class="text-xs font-mono text-on-surface">{{ $uang($item->item_harga) }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Subtotal</p>
+                                        <p class="text-xs font-mono font-semibold text-on-surface">{{ $uang($item->item_subtotal) }}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between pt-2 border-t border-outline-variant/50">
+                                    <span class="text-[9px] font-mono text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">Total Belanja {{ $uang($model->transaksi_total) }}</span>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </x-slot:mobile>
                 </x-table>
             </div>
         </x-card>
@@ -138,22 +168,22 @@
                     <span class="text-on-surface-variant">Total belanja</span>
                     <span class="font-semibold text-on-surface">{{ $uang($model->transaksi_total) }}</span>
                 </div>
+                @php
+                    $feePersen = $feePersen ?? \App\Models\Fee::persenMap();
+                    $feeNama = $feeNama ?? \App\Models\Fee::namaMap();
+                @endphp
+                @foreach ($feeRincian as $kode => $nominal)
                 <div class="flex items-center justify-between text-sm">
-                    <span class="text-on-surface-variant">Fee kebersihan</span>
-                    <span class="text-on-surface">{{ $uang($model->transaksi_fee_kebersihan) }}</span>
+                    <span class="text-on-surface-variant">Fee {{ $feeNama[$kode] ?? $kode }}@if(isset($feePersen[$kode])) ({{ rtrim(rtrim(number_format((float)$feePersen[$kode],2,',','.'),'0'),',') }}%)@endif</span>
+                    <span class="text-on-surface">{{ $uang($nominal) }}</span>
                 </div>
+                @endforeach
+                @if(empty($feeRincian) && $feeTotal > 0)
                 <div class="flex items-center justify-between text-sm">
-                    <span class="text-on-surface-variant">Fee keamanan</span>
-                    <span class="text-on-surface">{{ $uang($model->transaksi_fee_keamanan) }}</span>
+                    <span class="text-on-surface-variant">Fee (riwayat)</span>
+                    <span class="text-on-surface">{{ $uang($feeTotal) }}</span>
                 </div>
-                <div class="flex items-center justify-between text-sm">
-                    <span class="text-on-surface-variant">Fee pengelolaan</span>
-                    <span class="text-on-surface">{{ $uang($model->transaksi_fee_pengelolaan) }}</span>
-                </div>
-                <div class="flex items-center justify-between text-sm">
-                    <span class="text-on-surface-variant">Fee sistem</span>
-                    <span class="text-on-surface">{{ $uang($model->transaksi_fee_sistem) }}</span>
-                </div>
+                @endif
                 <div class="flex items-center justify-between text-sm border-t border-outline-variant pt-2">
                     <span class="font-semibold text-on-surface">Total fee</span>
                     <span class="font-semibold text-on-surface">{{ $uang($feeTotal) }}</span>
@@ -297,6 +327,29 @@
                             <td class="font-bold">{{ $uang($model->transaksi_bersih) }}</td>
                         </tr>
                     </x-slot:body>
+                    <x-slot:mobile>
+                        <div class="p-3 space-y-3">
+                            @foreach ($pembagian as $baris)
+                            <div class="border border-outline-variant rounded-xl p-4 bg-surface-container-lowest shadow-sm">
+                                <p class="text-sm font-bold text-on-surface truncate mb-3">{{ $baris['gerai'] }}</p>
+                                <div class="grid grid-cols-2 gap-3 mb-3">
+                                    <div>
+                                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Subtotal</p>
+                                        <p class="text-xs font-mono text-on-surface">{{ $uang($baris['subtotal']) }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Fee</p>
+                                        <p class="text-xs font-mono text-error">-{{ $uang($baris['fee']) }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Diterima</p>
+                                        <p class="text-xs font-mono font-semibold text-on-surface">{{ $uang($baris['bersih']) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </x-slot:mobile>
                 </x-table>
 
                 <p class="mt-3 text-xs text-on-surface-variant">

@@ -31,8 +31,8 @@
             <td>{{ $r->hasItems->map(fn ($i) => $i->hasGerai?->gerai_nama)->filter()->unique()->implode(', ') ?: ($r->hasGerai?->gerai_nama ?? '-') }}</td>
             <td>{{ $r->transaksi_jenis }}</td>
             <td>{{ $r->transaksi_total }}</td>
-            <td>{{ (int) $r->transaksi_fee_kebersihan + (int) $r->transaksi_fee_keamanan + (int) $r->transaksi_fee_pengelolaan }}</td>
-            <td>{{ $r->transaksi_fee_sistem }}</td>
+            <td>{{ $r->feeTotal() }}</td>
+            <td>{{ $r->feeRincian()['sistem'] ?? 0 }}</td>
             <td>{{ $r->transaksi_bersih }}</td>
             <td>{{ $r->transaksi_status }}</td>
         </tr>

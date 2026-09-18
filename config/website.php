@@ -84,4 +84,17 @@ return [
     */
 
     'qris' => env('QRIS', ''),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Fee e-Kantin (pindah dari fee-config/table)
+    |--------------------------------------------------------------------------
+    |
+    | Minimal nominal top up. Diatur via .env FEE_MIN_TOPUP dan halaman
+    | Settings → Website. Tabel fee_config tetap ada untuk riwayat,
+    | tapi sumber utama adalah .env ini.
+    |
+    */
+
+    'fee_min_topup' => (int) env('FEE_MIN_TOPUP', 10000),
 ];

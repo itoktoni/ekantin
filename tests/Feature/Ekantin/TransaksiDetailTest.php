@@ -28,14 +28,15 @@ test('halaman detail transaksi menampilkan rincian item, fee, dan pembagian gera
         ->assertOk()
         ->assertSee('Nasi Goreng')
         ->assertSee('Gerai Tes')
-        ->assertSee('Fee sistem')
+        ->assertSee('Fee Sistem')
+        ->assertSee('(5%)')
         ->assertSee('Saldo kartu siswa')
         ->assertSee('Pembagian Dana ke Gerai')
-        ->assertSee('Rp500')
+        ->assertSee('Rp1.000')
         ->assertSee('Rp20.000')
-        ->assertSee('Rp20.500')
-        ->assertSee('Rp19.500')
-        ->assertSee('Rp29.500');
+        ->assertSee('Rp21.000')
+        ->assertSee('Rp19.000')
+        ->assertSee('Rp29.000');
 });
 
 test('detail top up web yang masih menunggu tidak menampilkan saldo akhir', function () {

@@ -18,6 +18,7 @@ class Transaksi extends BaseModel
     protected $fillable = [
         'transaksi_jenis',
         'transaksi_status',
+        'transaksi_metode',
         'transaksi_id_kartu',
         'transaksi_id_gerai',
         'transaksi_total',
@@ -25,6 +26,8 @@ class Transaksi extends BaseModel
         'transaksi_fee_keamanan',
         'transaksi_fee_pengelolaan',
         'transaksi_fee_sistem',
+        'transaksi_fee_total',
+        'transaksi_fee_rincian',
         'transaksi_bersih',
         'transaksi_saldo_akhir',
         'transaksi_limit_snapshot',
@@ -57,6 +60,8 @@ class Transaksi extends BaseModel
             'transaksi_fee_keamanan' => 'integer',
             'transaksi_fee_pengelolaan' => 'integer',
             'transaksi_fee_sistem' => 'integer',
+            'transaksi_fee_total' => 'integer',
+            'transaksi_fee_rincian' => 'array',
             'transaksi_bersih' => 'integer',
             'transaksi_saldo_akhir' => 'integer',
             'transaksi_limit_snapshot' => 'integer',
@@ -73,10 +78,41 @@ class Transaksi extends BaseModel
         return [
             'transaksi_jenis' => 'required|in:topup_web,topup_tunai,beli,refund,koreksi,withdraw',
             'transaksi_status' => 'required|in:menunggu,berhasil,gagal,dibatalkan',
+            'transaksi_metode' => 'required|in:kartu,tunai,qris',
             'transaksi_total' => 'required|integer|min:0',
             'transaksi_idempotency' => 'nullable|string|max:64',
             'transaksi_alasan' => 'nullable|string|max:255',
         ];
+    }
+
+    // Total fee: kolom baru dulu, fallback jumlah 4 kolom lama (riwayat).
+    public function feeTotal(): int
+    {
+        if (is_array($this->transaksi_fee_rincian) && $this->transaksi_fee_rincian !== []) {
+            return (int) array_sum($this->transaksi_fee_rincian);
+        }
+        if ((int) $this->transaksi_fee_total > 0) {
+            return (int) $this->transaksi_fee_total;
+        }
+
+        return (int) $this->transaksi_fee_kebersihan + (int) $this->transaksi_fee_keamanan
+            + (int) $this->transaksi_fee_pengelolaan + (int) $this->transaksi_fee_sistem;
+    }
+
+    // Rincian fee: JSON baru dulu, fallback 4 kolom lama yang > 0.
+    public function feeRincian(): array
+    {
+        if (is_array($this->transaksi_fee_rincian) && $this->transaksi_fee_rincian !== []) {
+            return $this->transaksi_fee_rincian;
+        }
+        $lama = [
+            'kebersihan' => (int) $this->transaksi_fee_kebersihan,
+            'keamanan' => (int) $this->transaksi_fee_keamanan,
+            'pengelolaan' => (int) $this->transaksi_fee_pengelolaan,
+            'sistem' => (int) $this->transaksi_fee_sistem,
+        ];
+
+        return array_filter($lama, fn ($v) => $v > 0);
     }
 
     public function hasKartu(): BelongsTo

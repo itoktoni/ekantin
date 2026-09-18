@@ -1,8 +1,12 @@
 <?php /** @var App\Models\Transaksi $trx */ ?>
 @php
-    $feeTotal = (int) $trx->transaksi_fee_kebersihan + (int) $trx->transaksi_fee_keamanan + (int) $trx->transaksi_fee_pengelolaan + (int) $trx->transaksi_fee_sistem;
+    $feeTotal = $feeTotal ?? $trx->feeTotal();
+    $feeRincian = $feeRincian ?? $trx->feeRincian();
+    $feePersen = $feePersen ?? \App\Models\Fee::persenMap();
+    $feeNama = $feeNama ?? \App\Models\Fee::namaMap();
     $totalPotong = (int) $trx->transaksi_total + $feeTotal;
-    $namaSiswa = $trx->hasKartu?->hasUser?->name ?? '-';
+    $metode = $trx->transaksi_metode ?? 'kartu';
+    $namaSiswa = $trx->hasKartu?->hasUser?->name ?? 'Walk-in ('.ucfirst($metode).')';
     $barcodeSiswa = $trx->hasKartu?->kartu_barcode ?? '-';
     $nis = $trx->hasKartu?->kartu_nis ?? null;
     $kelas = $trx->hasKartu?->kartu_kelas ?? null;
@@ -83,10 +87,9 @@
             <div class="r-sum">
                 <div><span>Subtotal</span><span>{{ formatAngka((int)$trx->transaksi_total,'Rp') }}</span></div>
                 @if($feeTotal>0)
-                <div class="r-fee"><span>Fee kebersihan</span><span>{{ formatAngka((int)$trx->transaksi_fee_kebersihan,'Rp') }}</span></div>
-                <div class="r-fee"><span>Fee keamanan</span><span>{{ formatAngka((int)$trx->transaksi_fee_keamanan,'Rp') }}</span></div>
-                <div class="r-fee"><span>Fee pengelolaan</span><span>{{ formatAngka((int)$trx->transaksi_fee_pengelolaan,'Rp') }}</span></div>
-                <div class="r-fee"><span>Fee sistem</span><span>{{ formatAngka((int)$trx->transaksi_fee_sistem,'Rp') }}</span></div>
+                @foreach($feeRincian as $kode => $nominal)
+                <div class="r-fee"><span>Fee {{ $feeNama[$kode] ?? $kode }}@if(isset($feePersen[$kode])) ({{ rtrim(rtrim(number_format((float)$feePersen[$kode],2,',','.'),'0'),',') }}%)@endif</span><span>{{ formatAngka((int)$nominal,'Rp') }}</span></div>
+                @endforeach
                 <div class="r-sum-total"><span>Total fee</span><span>{{ formatAngka($feeTotal,'Rp') }}</span></div>
                 <div class="r-sum-pay"><span>POTONG SALDO</span><span>{{ formatAngka($totalPotong,'Rp') }}</span></div>
                 <div><span>Ke gerai</span><span>{{ formatAngka((int)$trx->transaksi_bersih,'Rp') }}</span></div>

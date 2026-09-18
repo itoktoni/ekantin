@@ -79,7 +79,12 @@ class TransaksiController extends Controller
         if ($virtualHandled) {
             request()->merge(['filters' => $filters]);
         }
-        return $q->filter()->sort();
+        $q = $q->filter()->sort();
+        if (! request()->filled('sort.0')) {
+            $q->orderByDesc('transaksi.transaksi_id');
+        }
+
+        return $q;
     }
 
     // Transaksi bersifat read-only: halaman update dipakai sebagai halaman detail
@@ -90,8 +95,7 @@ class TransaksiController extends Controller
             ->with(['hasKartu.hasUser', 'hasGerai', 'hasItems.hasGerai', 'hasKasir'])
             ->findOrFail($id);
 
-        $feeTotal = (int) $trx->transaksi_fee_kebersihan + (int) $trx->transaksi_fee_keamanan
-            + (int) $trx->transaksi_fee_pengelolaan + (int) $trx->transaksi_fee_sistem;
+        $feeTotal = $trx->feeTotal();
 
         $subtotalPerGerai = [];
         foreach ($trx->hasItems as $item) {
@@ -116,6 +120,9 @@ class TransaksiController extends Controller
         return $this->views('pages.transaksi.detail', [
             'model' => $trx,
             'feeTotal' => $feeTotal,
+            'feeRincian' => $trx->feeRincian(),
+            'feePersen' => \App\Models\Fee::persenMap(),
+            'feeNama' => \App\Models\Fee::namaMap(),
             'pembagian' => $pembagian,
         ]);
     }

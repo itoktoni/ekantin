@@ -131,6 +131,12 @@ trait ControllerTrait
         // Get the method name (e.g., getCreate)
         $method = debug_backtrace()[1]['function'];
 
+        // Normalize trait aliases (traitGetUpdate → getUpdate) so view
+        // resolution keeps working when controllers alias trait methods.
+        if (str_starts_with($method, 'trait')) {
+            $method = lcfirst(substr($method, 5));
+        }
+
         // Remove 'get' or 'post' prefix and convert to lowercase
         $action = strtolower(preg_replace('/^(get|post)/', '', $method));
 

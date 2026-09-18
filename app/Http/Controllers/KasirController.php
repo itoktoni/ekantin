@@ -42,13 +42,15 @@ class KasirController extends Controller
             'cari' => $cari,
             'kategori' => ProdukKategoriEnum::getOptions(),
             'idempotency' => 'POS-'.str()->random(16),
+            'fees' => \App\Models\Fee::query()->orderBy('fee_id')->get(),
         ]);
     }
 
     public function postPos(GeneralRequest $request)
     {
         $data = $request->validate([
-            'kartu_barcode' => 'required|string|max:50',
+            'metode' => 'required|in:kartu,tunai,qris',
+            'kartu_barcode' => 'required_if:metode,kartu|nullable|string|max:50',
             'idempotency' => 'required|string|max:64',
             'items' => 'required|array|min:1',
             'items.*.produk_id' => 'required|integer',
@@ -63,7 +65,8 @@ class KasirController extends Controller
             return redirect()->route('kasir.pos');
         }
         $response = ProcessPurchaseAction::run([
-            'kartu_barcode' => $data['kartu_barcode'],
+            'metode' => $data['metode'],
+            'kartu_barcode' => $data['kartu_barcode'] ?? null,
             'items' => $items,
             'idempotency' => $data['idempotency'],
             'id_kasir' => auth()->id(),
@@ -104,6 +107,10 @@ class KasirController extends Controller
             'model' => $this->model,
             'trx' => $trx,
             'kelompok' => $trx->hasItems->groupBy(fn ($i) => $i->hasGerai?->gerai_nama ?? '-'),
+            'feeRincian' => $trx->feeRincian(),
+            'feeTotal' => $trx->feeTotal(),
+            'feePersen' => \App\Models\Fee::persenMap(),
+            'feeNama' => \App\Models\Fee::namaMap(),
         ]);
     }
 }

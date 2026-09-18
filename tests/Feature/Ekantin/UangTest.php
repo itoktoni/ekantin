@@ -15,8 +15,10 @@ test('beli sukses potong saldo + fee snapshot, idempotency ganda satu struk', fu
     $r1 = ProcessPurchaseAction::run($input);
     $r2 = ProcessPurchaseAction::run($input);
     expect($r1['status'])->toBeTrue()
-        ->and($kartu->fresh()->kartu_saldo)->toBe(50000 - 20000 - 500)
-        ->and($gerai->fresh()->gerai_saldo)->toBe(20000 - 500)
+        ->and($kartu->fresh()->kartu_saldo)->toBe(50000 - 20000 - 1000)
+        ->and($gerai->fresh()->gerai_saldo)->toBe(20000 - 1000)
+        ->and($r1['data']->transaksi_fee_total)->toBe(1000)
+        ->and($r1['data']->transaksi_fee_rincian)->toBe(['sistem' => 1000])
         ->and($r2['data']->transaksi_id)->toBe($r1['data']->transaksi_id);
 });
 
@@ -39,10 +41,10 @@ test('keranjang campur dua gerai bayar sekali dan saldo terbagi', function () {
         ['produk_id' => $produkA->produk_id, 'qty' => 1],
         ['produk_id' => $produkB->produk_id, 'qty' => 2],
     ], 'idempotency' => 'POS-MIX-1']);
-    // total 20000, fee 500 proporsional -> tiap gerai 10000-250=9750; siswa 79500
+    // total 20000, fee 5% = 1000 proporsional -> tiap gerai 10000-500=9500; siswa 79000
     expect($r['status'])->toBeTrue()
-        ->and($kartu->fresh()->kartu_saldo)->toBe(100000 - 20000 - 500)
-        ->and($geraiA->fresh()->gerai_saldo)->toBe(9750)
-        ->and($geraiB->fresh()->gerai_saldo)->toBe(9750)
+        ->and($kartu->fresh()->kartu_saldo)->toBe(100000 - 20000 - 1000)
+        ->and($geraiA->fresh()->gerai_saldo)->toBe(9500)
+        ->and($geraiB->fresh()->gerai_saldo)->toBe(9500)
         ->and($r['data']->hasItems()->whereNotNull('item_id_gerai')->count())->toBe(2);
 });

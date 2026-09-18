@@ -18,8 +18,9 @@ trait SeedEkantin
         $gerai = Gerai::create(['gerai_nama' => 'Gerai Tes', 'gerai_id_vendor' => $vendor->id, 'gerai_status' => 'buka']);
         $produk = Produk::create(['produk_id_gerai' => $gerai->gerai_id, 'produk_nama' => 'Nasi Goreng', 'produk_harga' => $harga, 'produk_status' => 'tersedia']);
         if (class_exists(FeeConfig::class)) {
-            FeeConfig::firstOrCreate(['fee_aktif' => true], ['fee_sistem' => 500, 'fee_kebersihan' => 0, 'fee_keamanan' => 0, 'fee_pengelolaan' => 0, 'fee_min_topup' => 10000]);
+            FeeConfig::firstOrCreate(['fee_aktif' => true], ['fee_min_topup' => 10000]);
         }
+        \App\Models\Fee::firstOrCreate(['code_fee' => 'sistem'], ['nama_fee' => 'Sistem', 'value_fee' => 5]);
 
         return [$kartu, $gerai, $produk];
     }

@@ -59,6 +59,33 @@ class KartuController extends Controller
         ]);
     }
 
+    // Search kartu untuk picker kasir (via Route::auto '/kartu' → kartu.getSearch).
+    // Kasir/admin saja — role lain ditolak via config/permision.php.
+    public function getSearch(GeneralRequest $request)
+    {
+        $q = trim((string) $request->input('q', ''));
+        if (mb_strlen($q) < 2) {
+            return response()->json([]);
+        }
+        $rows = Kartu::query()->with('hasUser:id,name')
+            ->where('kartu_status', 'aktif')
+            ->where(function ($w) use ($q) {
+                $w->where('kartu_barcode', 'like', "%{$q}%")
+                    ->orWhere('kartu_nis', 'like', "%{$q}%")
+                    ->orWhereHas('hasUser', fn ($u) => $u->where('name', 'like', "%{$q}%"));
+            })
+            ->limit(10)->get()
+            ->map(fn ($k) => [
+                'kartu_id' => $k->kartu_id,
+                'barcode' => $k->kartu_barcode,
+                'nis' => $k->kartu_nis,
+                'nama' => $k->hasUser?->name ?? '-',
+                'saldo' => (int) $k->kartu_saldo,
+            ])->values();
+
+        return response()->json($rows);
+    }
+
     public function getCetak(GeneralRequest $request)
     {
         $ids = $request->input('ids', []);

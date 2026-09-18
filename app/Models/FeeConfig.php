@@ -9,10 +9,6 @@ class FeeConfig extends BaseModel
     protected $primaryKey = 'fee_id';
 
     protected $fillable = [
-        'fee_sistem',
-        'fee_kebersihan',
-        'fee_keamanan',
-        'fee_pengelolaan',
         'fee_min_topup',
         'fee_aktif',
     ];
@@ -22,7 +18,6 @@ class FeeConfig extends BaseModel
     ];
 
     public static $sortColumns = [
-        'fee_sistem',
         'fee_min_topup',
         'created_at',
     ];
@@ -30,10 +25,6 @@ class FeeConfig extends BaseModel
     protected function casts(): array
     {
         return [
-            'fee_sistem' => 'integer',
-            'fee_kebersihan' => 'integer',
-            'fee_keamanan' => 'integer',
-            'fee_pengelolaan' => 'integer',
             'fee_min_topup' => 'integer',
             'fee_aktif' => 'boolean',
         ];
@@ -47,10 +38,6 @@ class FeeConfig extends BaseModel
     public function rules(): array
     {
         return [
-            'fee_sistem' => 'required|integer|min:0',
-            'fee_kebersihan' => 'required|integer|min:0',
-            'fee_keamanan' => 'required|integer|min:0',
-            'fee_pengelolaan' => 'required|integer|min:0',
             'fee_min_topup' => 'required|integer|min:0',
             'fee_aktif' => 'boolean',
         ];
@@ -59,5 +46,19 @@ class FeeConfig extends BaseModel
     public static function aktif(): self
     {
         return static::where('fee_aktif', true)->latest('fee_id')->firstOrFail();
+    }
+
+    public static function minTopup(): int
+    {
+        // Sumber utama: .env FEE_MIN_TOPUP via config website. Fallback DB lama.
+        $dariEnv = (int) config('website.fee_min_topup', 0);
+        if ($dariEnv > 0) {
+            return $dariEnv;
+        }
+        try {
+            return (int) static::aktif()->fee_min_topup;
+        } catch (\Throwable $e) {
+            return 10000;
+        }
     }
 }

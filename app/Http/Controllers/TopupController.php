@@ -98,7 +98,7 @@ class TopupController extends Controller
             'kartu' => $kartu,
             'trx' => $trx,
             'qris' => $this->qris($trx),
-            'minTopup' => (int) FeeConfig::aktif()->fee_min_topup,
+            'minTopup' => FeeConfig::minTopup(),
             'idempotency' => 'TOPUPWEB-'.str()->random(16),
             'kartuOptions' => $kartuOptions,
             'history' => $history,

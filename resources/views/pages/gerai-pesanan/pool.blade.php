@@ -27,26 +27,37 @@
             </div>
             @endif
 
-            <div id="poolList" class="space-y-2">
-                @forelse($items as $i)
-                <div class="flex items-center justify-between border rounded-lg px-3 py-2" data-id="{{ $i->item_id }}">
-                    <span class="text-sm">
-                        <strong>{{ $i->item_qty }}x {{ $i->item_nama }}</strong>
-                        <span class="text-on-surface-variant">— {{ $i->hasTransaksi?->hasKartu?->hasUser?->name ?? '-' }}</span>
-                        <span class="text-on-surface-variant">({{ $i->hasGerai?->gerai_nama ?? '-' }} · {{ $i->hasTransaksi?->created_at?->format('H:i') }})</span>
-                        <span class="ml-1 text-xs px-2 py-0.5 rounded bg-surface-container">{{ $i->item_status }}</span>
-                    </span>
-                    <span class="flex items-center gap-2">
-                        <a href="{{ route('gerai.getPesananCetak', ['id' => $i->item_id_transaksi]) }}" target="_blank" class="inline-flex items-center gap-1 h-8 px-3 text-xs rounded-lg border border-secondary/30 text-secondary" title="Cetak ulang struk gerai ini (jika struk hilang)">
-                            <span class="material-symbols-outlined text-sm">print</span> Print
-                        </a>
-                        @if($i->item_status === 'baru')
-                        <button class="h-9 px-4 text-sm rounded-lg bg-primary text-on-primary" onclick="setStatus({{ $i->item_id }}, 'disiapkan')">Siapkan</button>
-                        @elseif($i->item_status === 'disiapkan')
-                        <button class="h-9 px-4 text-sm rounded-lg bg-primary text-on-primary" onclick="setStatus({{ $i->item_id }}, 'selesai')">Selesai</button>
-                        @endif
-                    </span>
-                </div>
+            <div id="poolList" class="space-y-5">
+                @forelse($grouped as $gName => $gItems)
+                <section>
+                    <h4 class="mb-2 flex items-center gap-1.5 text-sm font-bold text-on-surface">
+                        <span class="material-symbols-outlined text-[18px] text-primary">storefront</span>
+                        {{ $gName }}
+                        <span class="rounded-full bg-surface-container px-2 py-0.5 text-[11px] font-semibold text-on-surface-variant">{{ $gItems->count() }} pesanan</span>
+                    </h4>
+                    <div class="space-y-2">
+                        @foreach($gItems as $i)
+                        <div class="flex items-center justify-between border rounded-lg px-3 py-2" data-id="{{ $i->item_id }}">
+                            <span class="text-sm">
+                                <strong>{{ $i->item_qty }}x {{ $i->item_nama }}</strong>
+                                <span class="text-on-surface-variant">— {{ $i->hasTransaksi?->hasKartu?->hasUser?->name ?? '-' }}</span>
+                                <span class="text-on-surface-variant">({{ $i->hasTransaksi?->created_at?->format('H:i') }})</span>
+                                <span class="ml-1 text-xs px-2 py-0.5 rounded bg-surface-container">{{ $i->item_status }}</span>
+                            </span>
+                            <span class="flex items-center gap-2">
+                                <a href="{{ route('gerai.getPesananCetak', ['id' => $i->item_id_transaksi]) }}" target="_blank" class="inline-flex items-center gap-1 h-8 px-3 text-xs rounded-lg border border-secondary/30 text-secondary" title="Cetak ulang struk gerai ini (jika struk hilang)">
+                                    <span class="material-symbols-outlined text-sm">print</span> Print
+                                </a>
+                                @if($i->item_status === 'baru')
+                                <button class="h-9 px-4 text-sm rounded-lg bg-primary text-on-primary" onclick="setStatus({{ $i->item_id }}, 'disiapkan')">Siapkan</button>
+                                @elseif($i->item_status === 'disiapkan')
+                                <button class="h-9 px-4 text-sm rounded-lg bg-primary text-on-primary" onclick="setStatus({{ $i->item_id }}, 'selesai')">Selesai</button>
+                                @endif
+                            </span>
+                        </div>
+                        @endforeach
+                    </div>
+                </section>
                 @empty
                 <p class="text-sm text-on-surface-variant">Belum ada pesanan {{ $status }}.</p>
                 @endforelse

@@ -38,7 +38,7 @@
             <x-slot:body>
                 @foreach($data as $table)
                 @php
-                    $feeTotal = (int) $table->transaksi_fee_kebersihan + (int) $table->transaksi_fee_keamanan + (int) $table->transaksi_fee_pengelolaan + (int) $table->transaksi_fee_sistem;
+                    $feeTotal = $table->feeTotal();
                     $namaSiswa = $table->hasKartu?->hasUser?->name ?? $table->hasKartu?->kartu_nis ?? '-';
                 @endphp
                 <tr>
@@ -71,7 +71,7 @@
                 <div class="p-3 space-y-3" id="mBody">
                     @foreach($data as $table)
                     @php
-                        $feeTotalM = (int) $table->transaksi_fee_kebersihan + (int) $table->transaksi_fee_keamanan + (int) $table->transaksi_fee_pengelolaan + (int) $table->transaksi_fee_sistem;
+                        $feeTotalM = $table->feeTotal();
                         $namaSiswaM = $table->hasKartu?->hasUser?->name ?? $table->hasKartu?->kartu_nis ?? '-';
                     @endphp
                     <div class="border border-outline-variant rounded-xl p-4 bg-surface-container-lowest shadow-sm hover:border-primary/40 cursor-pointer" data-id="{{ $table->field_primary }}" onclick="window.location='{{ moduleRoute('getUpdate', ['id' => $table->field_primary]) }}'">

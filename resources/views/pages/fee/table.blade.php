@@ -1,4 +1,4 @@
-<?php /** @var App\Models\FeeConfig $table */ ?>
+<?php /** @var App\Models\Fee $table */ ?>
 
 <x-layouts::app>
     <x-breadcrumb :items="[['url' => '/dashboard', 'label' => 'Home'], ['url' => '', 'label' => moduleLabel()]]" />
@@ -37,7 +37,7 @@
                     <x-table-row-checkbox :model="$model" :value="$table->field_primary" />
                     <x-table-action :model="$model" :id="$table->field_primary" />
                     @foreach ($model::$sortColumns as $column)
-                    <td>{{ $table->$column }}</td>
+                    <td>{{ $column === 'value_fee' ? $table->$column.'%' : $table->$column }}</td>
                     @endforeach
                 </tr>
                 @endforeach
@@ -48,15 +48,15 @@
                 <div class="p-3 space-y-3" id="mBody">
                     @foreach($data as $table)
                     <div class="border border-outline-variant rounded-xl p-4 bg-surface-container-lowest shadow-sm" data-id="{{ $table->field_primary }}">
-                        <p class="text-sm font-bold text-on-surface truncate mb-3">Fee #{{ $table->field_name }}</p>
+                        <p class="text-sm font-bold text-on-surface truncate mb-3">{{ $table->nama_fee }} ({{ $table->value_fee }}%)</p>
                         <div class="grid grid-cols-2 gap-3 mb-3">
                             <div>
-                                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Status</p>
-                                <p class="text-xs font-medium text-primary truncate">{{ $table->fee_aktif ? 'Aktif' : 'Nonaktif' }}</p>
+                                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Kode</p>
+                                <p class="text-xs font-mono font-medium text-primary truncate">{{ $table->code_fee }}</p>
                             </div>
                             <div>
-                                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Min Top Up</p>
-                                <p class="text-xs font-medium text-on-surface">Rp{{ number_format((int) $table->fee_min_topup, 0, ',', '.') }}</p>
+                                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Persen</p>
+                                <p class="text-xs font-medium text-on-surface">{{ $table->value_fee }}%</p>
                             </div>
                         </div>
                         <div class="flex items-center justify-between pt-2 border-t border-outline-variant/50">

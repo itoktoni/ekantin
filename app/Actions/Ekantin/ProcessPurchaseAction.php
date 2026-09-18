@@ -4,7 +4,7 @@ namespace App\Actions\Ekantin;
 
 use App\Concerns\PayloadTrait;
 use App\Jobs\KirimNotifikasiJob;
-use App\Models\FeeConfig;
+use App\Models\Fee;
 use App\Models\Gerai;
 use App\Models\Kartu;
 use App\Models\Produk;
@@ -21,17 +21,23 @@ class ProcessPurchaseAction
     // Input: ['kartu_barcode', 'items' => [['produk_id', 'qty']], 'idempotency'].
     public function handle(array $input): array
     {
-        $fee = FeeConfig::aktif();
-        $feeTotal = (int) $fee->fee_kebersihan + (int) $fee->fee_keamanan + (int) $fee->fee_pengelolaan + (int) $fee->fee_sistem;
+        $rincianFee = [];
+        $feeTotal = 0;
 
         try {
-            return DB::transaction(function () use ($input, $fee, $feeTotal) {
-                $kartu = Kartu::where('kartu_barcode', $input['kartu_barcode'])->lockForUpdate()->first();
-                if (! $kartu) {
-                    return $this->payload(TOAST_FAILED, 'Kartu tidak ditemukan.');
-                }
-                if ($kartu->kartu_status !== 'aktif') {
-                    return $this->payload(TOAST_FAILED, 'Kartu nonaktif, transaksi ditolak.');
+            return DB::transaction(function () use ($input) {
+                $metode = $input['metode'] ?? 'kartu';
+                $isWalkin = in_array($metode, ['tunai', 'qris'], true);
+
+                $kartu = null;
+                if (! $isWalkin) {
+                    $kartu = Kartu::where('kartu_barcode', $input['kartu_barcode'])->lockForUpdate()->first();
+                    if (! $kartu) {
+                        return $this->payload(TOAST_FAILED, 'Kartu tidak ditemukan.');
+                    }
+                    if ($kartu->kartu_status !== 'aktif') {
+                        return $this->payload(TOAST_FAILED, 'Kartu nonaktif, transaksi ditolak.');
+                    }
                 }
                 if (! empty($input['idempotency'])) {
                     $ada = Transaksi::where('transaksi_idempotency', $input['idempotency'])->first();
@@ -61,41 +67,50 @@ class ProcessPurchaseAction
                 if (empty($rows)) {
                     return $this->payload(TOAST_FAILED, 'Keranjang kosong.');
                 }
-                if ((int) $kartu->kartu_saldo < $total + $feeTotal) {
-                    return $this->payload(TOAST_FAILED, 'Saldo tidak mencukupi. Kurang Rp'.number_format($total + $feeTotal - (int) $kartu->kartu_saldo, 0, ',', '.'));
-                }
-                if (! empty($kartu->kartu_limit_harian)) {
-                    $pakai = (int) Transaksi::where('transaksi_id_kartu', $kartu->kartu_id)
-                        ->where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')
-                        ->whereDate('created_at', today())->sum('transaksi_total');
-                    if ($pakai + $total > (int) $kartu->kartu_limit_harian) {
-                        $sisa = (int) $kartu->kartu_limit_harian - $pakai;
+                $rincianFee = Fee::rincian($total);
+                $feeTotal = (int) array_sum($rincianFee);
+                if (! $isWalkin) {
+                    if ((int) $kartu->kartu_saldo < $total + $feeTotal) {
+                        return $this->payload(TOAST_FAILED, 'Saldo tidak mencukupi. Kurang Rp'.number_format($total + $feeTotal - (int) $kartu->kartu_saldo, 0, ',', '.'));
+                    }
+                    if (! empty($kartu->kartu_limit_harian)) {
+                        $pakai = (int) Transaksi::where('transaksi_id_kartu', $kartu->kartu_id)
+                            ->where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')
+                            ->whereDate('created_at', today())->sum('transaksi_total');
+                        if ($pakai + $total > (int) $kartu->kartu_limit_harian) {
+                            $sisa = (int) $kartu->kartu_limit_harian - $pakai;
 
-                        return $this->payload(TOAST_FAILED, 'Limit harian tercapai. Sisa limit Rp'.number_format(max($sisa, 0), 0, ',', '.'));
+                            return $this->payload(TOAST_FAILED, 'Limit harian tercapai. Sisa limit Rp'.number_format(max($sisa, 0), 0, ',', '.'));
+                        }
                     }
                 }
                 $bersihTotal = max($total - $feeTotal, 0);
                 $bersihPerGerai = SplitDana::bagi($subPerGerai, min($feeTotal, $total));
-                $saldoAkhir = (int) $kartu->kartu_saldo - $total - $feeTotal;
+                $saldoAkhir = $isWalkin ? null : (int) $kartu->kartu_saldo - $total - $feeTotal;
                 $trx = Transaksi::create([
                     'transaksi_jenis' => 'beli',
                     'transaksi_status' => 'berhasil',
-                    'transaksi_id_kartu' => $kartu->kartu_id,
+                    'transaksi_metode' => $metode,
+                    'transaksi_id_kartu' => $isWalkin ? null : $kartu->kartu_id,
                     'transaksi_total' => $total,
-                    'transaksi_fee_kebersihan' => $fee->fee_kebersihan,
-                    'transaksi_fee_keamanan' => $fee->fee_keamanan,
-                    'transaksi_fee_pengelolaan' => $fee->fee_pengelolaan,
-                    'transaksi_fee_sistem' => $fee->fee_sistem,
+                    'transaksi_fee_kebersihan' => 0,
+                    'transaksi_fee_keamanan' => 0,
+                    'transaksi_fee_pengelolaan' => 0,
+                    'transaksi_fee_sistem' => 0,
+                    'transaksi_fee_total' => $feeTotal,
+                    'transaksi_fee_rincian' => $rincianFee,
                     'transaksi_bersih' => $bersihTotal,
                     'transaksi_saldo_akhir' => $saldoAkhir,
-                    'transaksi_limit_snapshot' => $kartu->kartu_limit_harian,
-                    'transaksi_idempotency' => $input['idempotency'] ?? ('POS-'.$kartu->kartu_id.'-'.time()),
+                    'transaksi_limit_snapshot' => $isWalkin ? null : $kartu->kartu_limit_harian,
+                    'transaksi_idempotency' => $input['idempotency'] ?? ($isWalkin ? 'POS-W-'.time() : 'POS-'.$kartu->kartu_id.'-'.time()),
                     'transaksi_id_kasir' => $input['id_kasir'] ?? null,
                 ]);
                 foreach ($rows as $r) {
                     $trx->hasItems()->create(['item_id_gerai' => $r['gerai_id'], 'item_nama' => $r['nama'], 'item_harga' => $r['harga'], 'item_qty' => $r['qty'], 'item_subtotal' => $r['subtotal'], 'item_status' => 'baru']);
                 }
-                $kartu->update(['kartu_saldo' => $saldoAkhir]);
+                if (! $isWalkin) {
+                    $kartu->update(['kartu_saldo' => $saldoAkhir]);
+                }
                 foreach ($bersihPerGerai as $gid => $bersih) {
                     $geraiIds[$gid]->increment('gerai_saldo', max($bersih, 0));
                 }

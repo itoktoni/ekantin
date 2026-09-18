@@ -130,6 +130,16 @@
                     <textarea name="footer_text" rows="2"
                         class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">{{ old('footer_text', $settings['footer_text'] ?? '') }}</textarea>
                 </div>
+                <div class="md:col-span-2 border-t border-outline-variant pt-4">
+                    <h3 class="text-sm font-bold text-on-surface mb-3">Fee e-Kantin (pindahan fee-config/table)</h3>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Minimal Top Up (Rp)</label>
+                    <input type="number" name="fee_min_topup" min="0" step="1000" value="{{ old('fee_min_topup', $settings['fee_min_topup'] ?? 10000) }}"
+                        class="w-full md:w-64 border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm" required>
+                    <p class="text-xs text-on-surface-variant mt-1">Sumber: .env FEE_MIN_TOPUP. Tersimpan juga ke fee_config aktif untuk riwayat.</p>
+                    @error('fee_min_topup')
+                        <p class="text-xs text-error mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
             <div class="flex items-center gap-3 pt-4 border-t border-outline-variant">

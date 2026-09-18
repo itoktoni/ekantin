@@ -24,7 +24,7 @@ class TopupWebAction
         try {
             return DB::transaction(function () use ($input) {
                 $nominal = (int) ($input['nominal'] ?? 0);
-                $min = (int) FeeConfig::aktif()->fee_min_topup;
+                $min = FeeConfig::minTopup();
                 if ($nominal < $min) {
                     return $this->payload(TOAST_FAILED, 'Minimal top up Rp'.number_format($min, 0, ',', '.'));
                 }

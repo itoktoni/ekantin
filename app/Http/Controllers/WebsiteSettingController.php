@@ -35,6 +35,7 @@ class WebsiteSettingController extends Controller
             'remove_favicon' => ['nullable', 'boolean'],
             'primary_color' => ['nullable', 'string', 'max:7'],
             'footer_text' => ['nullable', 'string'],
+            'fee_min_topup' => ['required', 'integer', 'min:0'],
         ]);
 
         $dir = public_path('storage/website');
@@ -58,6 +59,9 @@ class WebsiteSettingController extends Controller
             $envUpdates['WEBSITE_COLOR_PRIMARY'] = $validated['primary_color'];
         }
 
+        // Fee e-Kantin → .env (pindahan fee-config/table)
+        $envUpdates['FEE_MIN_TOPUP'] = (string) (int) $validated['fee_min_topup'];
+
         // Logo file upload
         if ($request->hasFile('logo')) {
             $this->deleteOld(config('website.logo'));
@@ -77,6 +81,28 @@ class WebsiteSettingController extends Controller
         }
 
         $this->writeToEnv($envUpdates);
+
+        // Sinkron ke fee_config aktif agar TopupWebAction lama tetap jalan.
+        try {
+            $cfg = \App\Models\FeeConfig::where('fee_aktif', true)->latest('fee_id')->first();
+            if ($cfg) {
+                $lama = (int) $cfg->fee_min_topup;
+                $baru = (int) $validated['fee_min_topup'];
+                if ($lama !== $baru) {
+                    $cfg->update(['fee_min_topup' => $baru]);
+                    \App\Models\FeeHistory::create([
+                        'history_field' => 'fee_min_topup',
+                        'history_lama' => $lama,
+                        'history_baru' => $baru,
+                        'history_id_admin' => auth()->id(),
+                    ]);
+                }
+            } else {
+                \App\Models\FeeConfig::create(['fee_min_topup' => (int) $validated['fee_min_topup'], 'fee_aktif' => true]);
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         flash()->success('Website settings saved.');
 

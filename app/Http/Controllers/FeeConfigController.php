@@ -13,7 +13,7 @@ class FeeConfigController extends Controller
 {
     use ControllerTrait;
 
-    protected array $feeFields = ['fee_sistem', 'fee_kebersihan', 'fee_keamanan', 'fee_pengelolaan', 'fee_min_topup'];
+    protected array $feeFields = ['fee_min_topup'];
 
     public function __construct(FeeConfig $model)
     {

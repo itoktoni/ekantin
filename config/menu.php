@@ -51,7 +51,7 @@ return [
             'label' => 'Laporan & Fee',
             'items' => [
                 ['route' => 'laporan.index', 'icon' => 'assessment', 'label' => 'Laporan', 'match' => ['laporan.*']],
-                ['route' => 'fee-config.getTable', 'icon' => 'tune', 'label' => 'Fee Config', 'match' => ['fee-config.*']],
+                ['route' => 'fee.getTable', 'icon' => 'percent', 'label' => 'Fee Produk', 'match' => ['fee.*']],
             ],
         ],
         [

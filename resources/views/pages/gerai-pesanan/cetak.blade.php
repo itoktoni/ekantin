@@ -1,6 +1,9 @@
 <?php /** @var App\Models\Transaksi $trx */ ?>
 @php
-    $feeTotal = (int) $trx->transaksi_fee_kebersihan + (int) $trx->transaksi_fee_keamanan + (int) $trx->transaksi_fee_pengelolaan + (int) $trx->transaksi_fee_sistem;
+    $feeTotal = $trx->feeTotal();
+    $feeRincian = $trx->feeRincian();
+    $feePersen = \App\Models\Fee::persenMap();
+    $feeNama = \App\Models\Fee::namaMap();
     $totalPotong = (int) $trx->transaksi_total + $feeTotal;
     $namaSiswa = $trx->hasKartu?->hasUser?->name ?? '-';
     $barcodeSiswa = $trx->hasKartu?->kartu_barcode ?? '-';
@@ -85,6 +88,9 @@
                 <div><span>Subtotal (semua gerai)</span><span>{{ formatAngka((int)$trx->transaksi_total,'Rp') }}</span></div>
                 <div><span>Subtotal gerai ini</span><span>{{ formatAngka((int)$trx->hasItems->sum('item_subtotal'),'Rp') }}</span></div>
                 @if($feeTotal>0)
+                @foreach($feeRincian as $kode => $nominal)
+                <div class="r-fee"><span>Fee {{ $feeNama[$kode] ?? $kode }}@if(isset($feePersen[$kode])) ({{ rtrim(rtrim(number_format((float)$feePersen[$kode],2,',','.'),'0'),',') }}%)@endif</span><span>{{ formatAngka((int)$nominal,'Rp') }}</span></div>
+                @endforeach
                 <div class="r-sum-total"><span>Total fee (transaksi)</span><span>{{ formatAngka($feeTotal,'Rp') }}</span></div>
                 <div class="r-sum-pay"><span>POTONG SALDO</span><span>{{ formatAngka($totalPotong,'Rp') }}</span></div>
                 @endif

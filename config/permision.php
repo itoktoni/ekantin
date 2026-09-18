@@ -150,6 +150,24 @@ foreach (['save','create','delete','show','update','table'] as $act) {
 foreach (['save','create','delete','show','update'] as $act) {
     $restrict['vendor']['transaksi.postUpdate'][] = $act;
 }
+// Transaksi read-only untuk SEMUA role: hapus baris tanpa reversal merusak
+// kartu_saldo/gerai_saldo (lihat RefundAction untuk pembatalan yang benar).
+// Deny 'delete' di getTable menyembunyikan SEMUA tombol delete (checkbox,
+// ikon baris, bulk bar); controller tetap abort 404 sebagai lapis kedua.
+foreach (['user','editor','admin','developer','super_admin','kasir_sekolah','vendor','orang_tua','siswa'] as $peran) {
+    $restrict[$peran]['transaksi.getTable'][] = 'delete';
+    $restrict[$peran]['transaksi.getDelete'][] = 'delete';
+    $restrict[$peran]['transaksi.postDelete'][] = 'delete';
+}
+// Pembagian tidak punya form edit (snapshot hitungan) — sembunyikan ikon edit
+// di SEMUA role agar tidak ada tombol rusak ke view yang tidak ada.
+foreach (['user','editor','admin','developer','super_admin','kasir_sekolah','vendor','orang_tua','siswa'] as $peran) {
+    $restrict[$peran]['pembagian.getTable'][] = 'update';
+    $restrict[$peran]['pembagian.getUpdate'][] = 'update';
+    $restrict[$peran]['pembagian.postUpdate'][] = 'update';
+    $restrict[$peran]['pembagian.getCreate'][] = 'create';
+    $restrict[$peran]['pembagian.postCreate'][] = 'create';
+}
 // User management: vendor/kasir/orang_tua/siswa tidak boleh sama sekali (lihat, buat, ubah, hapus).
 // NOTE: deny-list per route-name — route yang tidak terdaftar = ALLOW. Sebelumnya hanya
 // user.getTable/getCreate yang di-deny sehingga GET user/delete/{id} (module user.getDelete)
@@ -220,6 +238,20 @@ foreach (['orang_tua', 'siswa', 'kasir_sekolah'] as $peran) {
         $restrict[$peran]['penarikan.getShow'][] = $act;
         $restrict[$peran]['penarikan.getCreate'][] = $act;
         $restrict[$peran]['penarikan.postCreate'][] = $act;
+    }
+}
+// Modul fee: admin saja — vendor/kasir/orang_tua/siswa ditolak total.
+foreach (['vendor', 'kasir_sekolah', 'orang_tua', 'siswa'] as $peran) {
+    foreach (['fee.getTable', 'fee.getCreate', 'fee.postCreate', 'fee.getUpdate', 'fee.postUpdate', 'fee.getDelete', 'fee.postDelete', 'fee.getShow'] as $mod) {
+        foreach (['table', 'save', 'create', 'update', 'delete', 'show'] as $act) {
+            $restrict[$peran][$mod][] = $act;
+        }
+    }
+}
+// Picker kartu kasir: kasir/admin saja — vendor/orang_tua/siswa ditolak.
+foreach (['vendor', 'orang_tua', 'siswa'] as $peran) {
+    foreach (['search', 'table', 'save', 'create', 'update', 'delete', 'show'] as $act) {
+        $restrict[$peran]['kartu.getSearch'][] = $act;
     }
 }
 // Pembagian getShow (JSON satu record, tanpa scope) — vendor hanya via table;

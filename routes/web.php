@@ -42,6 +42,7 @@ Route::middleware(['auth', 'verified', 'access'])->group(function () {
     Route::auto('/produk', 'ProdukController', ['name' => 'produk']);
     Route::auto('/transaksi', 'TransaksiController', ['name' => 'transaksi']);
     Route::auto('/fee-config', 'FeeConfigController', ['name' => 'fee-config']);
+    Route::auto('/fee', 'FeeController', ['name' => 'fee']);
     Route::auto('/penarikan', 'PenarikanController', ['name' => 'penarikan']);
     Route::auto('/pembagian', 'PembagianController', ['name' => 'pembagian']);
     Route::auto('/notifikasi-log', 'NotifikasiLogController', ['name' => 'notifikasi-log']);

@@ -29,7 +29,7 @@ class RefundAction
                     return $this->payload(TOAST_FAILED, 'Transaksi ini sudah pernah di-refund.');
                 }
                 $kartu = $asal->hasKartu()->lockForUpdate()->firstOrFail();
-                $kembali = (int) $asal->transaksi_total + (int) $asal->transaksi_fee_kebersihan + (int) $asal->transaksi_fee_keamanan + (int) $asal->transaksi_fee_pengelolaan + (int) $asal->transaksi_fee_sistem;
+                $kembali = (int) $asal->transaksi_total + $asal->feeTotal();
                 $saldoAkhir = (int) $kartu->kartu_saldo + $kembali;
                 $refund = Transaksi::create([
                     'transaksi_jenis' => 'refund',
@@ -51,7 +51,7 @@ class RefundAction
                     }
                 }
                 if (! empty($subPerGerai)) {
-                    $feeAsal = (int) $asal->transaksi_fee_kebersihan + (int) $asal->transaksi_fee_keamanan + (int) $asal->transaksi_fee_pengelolaan + (int) $asal->transaksi_fee_sistem;
+                    $feeAsal = $asal->feeTotal();
                     $kembaliPerGerai = SplitDana::bagi($subPerGerai, min($feeAsal, (int) $asal->transaksi_total));
                     foreach ($kembaliPerGerai as $gid => $bersih) {
                         $gerai = Gerai::whereKey($gid)->lockForUpdate()->first();
