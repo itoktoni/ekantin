@@ -358,11 +358,11 @@
                 @if(!empty($fees) && $fees->isNotEmpty())
                 <div class="space-y-2">
                     @foreach($fees as $f)
-                    <div class="flex items-center justify-between border rounded-lg px-3 py-2 text-sm">
-                        <span><strong>{{ $f->nama_fee }}</strong> <span class="text-xs text-on-surface-variant font-mono">{{ $f->code_fee }}</span> • {{ rtrim(rtrim(number_format((float)$f->value_fee,2,',','.'),'0'),',') }}%</span>
-                        <span class="flex gap-1">
-                            <a href="{{ route('fee.getUpdate', ['id' => $f->fee_id]) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Edit">edit</a>
-                            <a href="{{ route('fee.getDelete', ['id' => $f->fee_id]) }}" onclick="return confirm('Hapus fee {{ $f->nama_fee }}?')" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-error/10 text-error hover:bg-error/20" title="Delete">delete</a>
+                    <div class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 text-sm">
+                        <span class="min-w-0 truncate"><strong>{{ $f->nama_fee }}</strong> <span class="text-xs text-on-surface-variant font-mono">{{ $f->code_fee }}</span> • {{ rtrim(rtrim(number_format((float)$f->value_fee,2,',','.'),'0'),',') }}%</span>
+                        <span class="flex gap-1 shrink-0">
+                            <a href="{{ route('fee.getUpdate', ['id' => $f->fee_id]) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors" title="Edit"><span class="material-symbols-outlined text-lg">edit</span></a>
+                            <a href="{{ route('fee.getDelete', ['id' => $f->fee_id]) }}" onclick="return confirm('Hapus fee {{ $f->nama_fee }}?')" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-error/10 text-error hover:bg-error/20 transition-colors" title="Hapus"><span class="material-symbols-outlined text-lg">delete</span></a>
                         </span>
                     </div>
                     @endforeach
@@ -375,8 +375,8 @@
                 <p class="text-sm text-on-surface-variant">Belum ada fee. Fee kosong = tanpa potongan.</p>
                 @endif
                 <div class="mt-3 flex gap-2">
-                    <a href="{{ route('fee.getTable') }}" class="inline-flex h-8 px-3 text-xs rounded-lg border items-center">Kelola Fee</a>
-                    <a href="{{ route('fee.getCreate') }}" class="inline-flex h-8 px-3 text-xs rounded-lg bg-primary text-on-primary items-center">+ Tambah</a>
+                    <a href="{{ route('fee.getTable') }}" class="inline-flex h-8 px-3 text-xs rounded-lg border items-center gap-1"><span class="material-symbols-outlined text-base">settings</span>Kelola Fee</a>
+                    <a href="{{ route('fee.getCreate') }}" class="inline-flex h-8 px-3 text-xs rounded-lg bg-primary text-on-primary items-center gap-1"><span class="material-symbols-outlined text-base">add</span>Tambah</a>
                 </div>
             </div>
             <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
@@ -389,9 +389,9 @@
                 @if(!empty($feeBulan['rincian']))
                 <div class="space-y-2">
                     @foreach($feeBulan['rincian'] as $kode => $nominal)
-                    <div class="flex items-center justify-between border rounded-lg px-3 py-2 text-sm">
-                        <span>Fee {{ $fees->firstWhere('code_fee',$kode)?->nama_fee ?? $kode }}</span>
-                        <span class="font-mono">{{ formatAngka((int)$nominal,'Rp') }}</span>
+                    <div class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 text-sm">
+                        <span class="min-w-0 truncate">Fee {{ $fees->firstWhere('code_fee',$kode)?->nama_fee ?? $kode }}</span>
+                        <span class="font-mono shrink-0">{{ formatAngka((int)$nominal,'Rp') }}</span>
                     </div>
                     @endforeach
                 </div>
@@ -399,7 +399,7 @@
                 <p class="text-sm text-on-surface-variant">Belum ada fee bulan ini.</p>
                 @endif
                 @endif
-                <a href="{{ route('laporan.index') }}" class="inline-flex mt-3 h-8 px-3 text-xs rounded-lg border items-center">Lihat Laporan</a>
+                <a href="{{ route('laporan.index') }}" class="inline-flex mt-3 h-8 px-3 text-xs rounded-lg border items-center gap-1"><span class="material-symbols-outlined text-base">assessment</span>Lihat Laporan</a>
             </div>
         </div>
         @if(!empty($pendapatanPerGeraiChart))
@@ -418,13 +418,13 @@
                 @if(!empty($recentPembagian) && $recentPembagian->isNotEmpty())
                 <div class="space-y-2">
                     @foreach($recentPembagian as $pb)
-                    <div class="flex items-center justify-between border rounded-lg px-3 py-2 text-sm">
-                        <span>{{ $pb->hasGerai?->gerai_nama ?? '-' }} • {{ formatDate($pb->pembagian_tanggal) }} • {{ formatAngka((int)$pb->pembagian_bersih,'Rp') }}</span>
-                        <span class="text-xs">{{ $pb->hasKasir?->name ?? '-' }}</span>
+                    <div class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 text-sm">
+                        <span class="min-w-0 truncate">{{ $pb->hasGerai?->gerai_nama ?? '-' }} • {{ formatDate($pb->pembagian_tanggal) }} • {{ formatAngka((int)$pb->pembagian_bersih,'Rp') }}</span>
+                        <span class="text-xs shrink-0">{{ $pb->hasKasir?->name ?? '-' }}</span>
                     </div>
                     @endforeach
                 </div>
-                <a href="{{ route('pembagian.getTable') }}" class="inline-flex mt-3 h-8 px-3 text-xs rounded-lg border">Lihat Pembagian</a>
+                <a href="{{ route('pembagian.getTable') }}" class="inline-flex mt-3 h-8 px-3 text-xs rounded-lg border items-center gap-1"><span class="material-symbols-outlined text-base">payments</span>Lihat Pembagian</a>
                 @else
                 <p class="text-sm text-on-surface-variant">Belum ada pembagian.</p>
                 @endif
@@ -436,9 +436,9 @@
                 @if(!empty($recentTransaksiAdmin) && $recentTransaksiAdmin->isNotEmpty())
                 <div class="space-y-2">
                     @foreach($recentTransaksiAdmin as $tr)
-                    <div class="flex items-center justify-between border rounded-lg px-3 py-2 text-sm">
-                        <span><strong>{{ $tr->hasKartu?->hasUser?->name ?? '-' }}</strong> • {{ formatAngka((int)$tr->transaksi_total,'Rp') }} • {{ formatDate($tr->created_at,'d/m H:i') }}</span>
-                        <x-badge :type="$tr->transaksi_status==='berhasil'?'success':'warning'">{{ $tr->transaksi_status }}</x-badge>
+                    <div class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 text-sm">
+                        <span class="min-w-0 truncate"><strong>{{ $tr->hasKartu?->hasUser?->name ?? '-' }}</strong> • {{ formatAngka((int)$tr->transaksi_total,'Rp') }} • {{ formatDate($tr->created_at,'d/m H:i') }}</span>
+                        <span class="shrink-0"><x-badge :type="$tr->transaksi_status==='berhasil'?'success':'warning'">{{ $tr->transaksi_status }}</x-badge></span>
                     </div>
                     @endforeach
                 </div>
@@ -450,9 +450,9 @@
                 <h3 class="font-semibold pb-3 mb-3 border-b flex items-center gap-2"><span class="material-symbols-outlined text-primary">group</span> Gerai & Saldo</h3>
                 <div class="space-y-2">
                     @foreach(\App\Models\Gerai::with('hasVendor')->orderBy('gerai_nama')->get() as $g)
-                    <div class="flex items-center justify-between border rounded-lg px-3 py-2">
-                        <span><strong>{{ $g->gerai_nama }}</strong> • {{ $g->hasVendor?->name ?? '-' }} • {{ $g->gerai_status }}</span>
-                        <span class="font-mono text-sm">{{ formatAngka((int)$g->gerai_saldo,'Rp') }}</span>
+                    <div class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2">
+                        <span class="min-w-0 truncate text-sm"><strong>{{ $g->gerai_nama }}</strong> • {{ $g->hasVendor?->name ?? '-' }} • {{ $g->gerai_status }}</span>
+                        <span class="font-mono text-sm shrink-0">{{ formatAngka((int)$g->gerai_saldo,'Rp') }}</span>
                     </div>
                     @endforeach
                 </div>
