@@ -35,7 +35,7 @@ class GeraiPesananController extends Controller
         $items = TransaksiItem::query()
             ->join('transaksi', 'transaksi.transaksi_id', '=', 'transaksi_item.item_id_transaksi')
             ->leftJoin('kartu', 'kartu.kartu_id', '=', 'transaksi.transaksi_id_kartu')
-            ->leftJoin('users as siswa', 'siswa.id', '=', 'kartu.kartu_id_user')
+            ->leftJoin('users as pengguna', 'pengguna.id', '=', 'kartu.kartu_id_user')
             ->leftJoin('gerai', 'gerai.gerai_id', '=', 'transaksi_item.item_id_gerai')
             ->where('transaksi.transaksi_jenis', 'beli')
             ->where('transaksi.transaksi_status', 'berhasil')
@@ -65,7 +65,7 @@ class GeraiPesananController extends Controller
                     'nama' => $i->item_nama,
                     'qty' => $i->item_qty,
                     'status' => $i->item_status,
-                    'siswa' => $i->hasTransaksi?->hasKartu?->hasUser?->name ?? '-',
+                    'pengguna' => $i->hasTransaksi?->hasKartu?->hasUser?->name ?? '-',
                     'gerai' => $i->hasGerai?->gerai_nama ?? '-',
                     'waktu' => $i->hasTransaksi?->created_at?->format('H:i'),
                 ]),

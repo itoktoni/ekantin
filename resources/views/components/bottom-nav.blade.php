@@ -4,16 +4,16 @@
         'vendor' => [
             ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Home'],
             ['route' => 'produk.getTable', 'icon' => 'fastfood', 'label' => 'Produk'],
+            ['route' => 'kasir.pos', 'icon' => 'point_of_sale', 'label' => 'Kasir'],
             ['route' => 'gerai.getPesanan', 'icon' => 'notifications', 'label' => 'Pesanan'],
             ['route' => 'transaksi.getTable', 'icon' => 'receipt_long', 'label' => 'Transaksi'],
-            ['route' => 'penarikan.getTable', 'icon' => 'savings', 'label' => 'Tarik'],
         ],
         'kasir_sekolah' => [
             ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Home'],
-            ['route' => 'produk.getTable', 'icon' => 'fastfood', 'label' => 'Produk'],
-            ['route' => 'kasir.pos', 'icon' => 'point_of_sale', 'label' => 'Kasir'],
-            ['route' => 'transaksi.getTable', 'icon' => 'receipt_long', 'label' => 'Transaksi'],
             ['route' => 'topup.tunai', 'icon' => 'payments', 'label' => 'TopUp'],
+            ['route' => 'topup.web', 'icon' => 'account_balance_wallet', 'label' => 'QRIS'],
+            ['route' => 'penarikan.getTable', 'icon' => 'savings', 'label' => 'Tukar'],
+            ['route' => 'pembagian.getTable', 'icon' => 'payments', 'label' => 'Bagi'],
         ],
         'orang_tua' => [
             ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Home'],
@@ -22,7 +22,7 @@
             ['route' => 'laporan.index', 'icon' => 'assessment', 'label' => 'Laporan'],
             ['route' => 'topup.web', 'icon' => 'account_balance_wallet', 'label' => 'TopUp'],
         ],
-        'siswa' => [
+        'pengguna' => [
             ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Home'],
             ['route' => 'kartu.getTable', 'icon' => 'badge', 'label' => 'Kartu'],
             ['route' => 'transaksi.getTable', 'icon' => 'receipt_long', 'label' => 'Jajan'],

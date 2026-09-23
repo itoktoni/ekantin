@@ -41,7 +41,7 @@ test('keranjang campur dua gerai bayar sekali dan saldo terbagi', function () {
         ['produk_id' => $produkA->produk_id, 'qty' => 1],
         ['produk_id' => $produkB->produk_id, 'qty' => 2],
     ], 'idempotency' => 'POS-MIX-1']);
-    // total 20000, fee 5% = 1000 proporsional -> tiap gerai 10000-500=9500; siswa 79000
+    // total 20000, fee 5% = 1000 proporsional -> tiap gerai 10000-500=9500; pengguna 79000
     expect($r['status'])->toBeTrue()
         ->and($kartu->fresh()->kartu_saldo)->toBe(100000 - 20000 - 1000)
         ->and($geraiA->fresh()->gerai_saldo)->toBe(9500)

@@ -3,10 +3,10 @@
 <x-layouts::app>
     <x-breadcrumb :items="[['url' => '/dashboard', 'label' => 'Home'], ['url' => '', 'label' => 'Top Up Web']]" />
 
-    {{-- Cari kartu — scan atau pilih siswa --}}
+    {{-- Cari kartu — scan atau pilih pengguna --}}
     <x-form :model="$model" :action="route('topup.web')" :method="'GET'">
-        <x-card label="Cari Kartu — Scan atau Pilih Siswa">
-            <x-select col="9" name="kartu_barcode" label="Pilih Siswa / Scan Barcode" :options="['' => '-- Ketik atau Scan --'] + ($kartuOptions ?? [])" class="search" :default="$kartu?->kartu_barcode ?? request('kartu_barcode') ?? request('kartu')" />
+        <x-card label="Cari Kartu — Scan atau Pilih Pengguna">
+            <x-select col="9" name="kartu_barcode" label="Pilih Pengguna / Scan Barcode" :options="['' => '-- Ketik atau Scan --'] + ($kartuOptions ?? [])" class="search" :default="$kartu?->kartu_barcode ?? request('kartu_barcode') ?? request('kartu')" />
             <div class="col-span-3 flex items-end gap-2">
                 <button type="button" onclick="startScan('kartu_barcode')" class="inline-flex items-center gap-1 h-10 px-4 text-xs font-semibold rounded-xl border border-outline-variant bg-surface-container"><span class="material-symbols-outlined text-sm">qr_code_scanner</span> Scan</button>
                 <x-button variant="primary" class="flex-1" type="submit">Cari</x-button>
@@ -57,7 +57,7 @@
 
             <div class="col-span-12">
                 <p class="text-sm text-on-surface">
-                    Siswa: <strong>{{ $kartu->hasUser?->name ?? '-' }}</strong>
+                    Pengguna: <strong>{{ $kartu->hasUser?->name ?? '-' }}</strong>
                     <span class="text-on-surface-variant">({{ $kartu->kartu_nis ?? '-' }} / {{ $kartu->kartu_kelas ?? '-' }})</span>
                 </p>
                 <p class="text-sm text-on-surface mt-1">
@@ -172,7 +172,7 @@
                         </span>
                     </div>
                     <div class="flex items-center justify-between text-sm">
-                        <span class="text-on-surface-variant">Siswa</span>
+                        <span class="text-on-surface-variant">Pengguna</span>
                         <span class="font-semibold text-on-surface">{{ $trx->hasKartu?->hasUser?->name ?? $kartu?->hasUser?->name ?? '-' }}</span>
                     </div>
                     <div class="flex items-center justify-between text-sm">
@@ -257,7 +257,7 @@
         <div class="col-span-12">
             <div class="hidden md:block overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead><tr class="text-left text-xs uppercase text-on-surface-variant border-b"><th class="pb-2">Waktu</th><th class="pb-2">Siswa</th><th class="pb-2">Jenis</th><th class="pb-2">Nominal</th><th class="pb-2">Status</th><th class="pb-2">Saldo Akhir</th><th class="pb-2">Aksi</th></tr></thead>
+                    <thead><tr class="text-left text-xs uppercase text-on-surface-variant border-b"><th class="pb-2">Waktu</th><th class="pb-2">Pengguna</th><th class="pb-2">Jenis</th><th class="pb-2">Nominal</th><th class="pb-2">Status</th><th class="pb-2">Saldo Akhir</th><th class="pb-2">Aksi</th></tr></thead>
                     <tbody>
                         @foreach($history as $h)
                         <tr class="border-b border-outline-variant/50">

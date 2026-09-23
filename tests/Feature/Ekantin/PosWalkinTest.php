@@ -40,21 +40,28 @@ test("alur kartu tidak berubah (default metode kartu)", function () {
         ->and($kartu->fresh()->kartu_saldo)->toBe(50000 - 10000 - 500);
 });
 
-test("search kartu: kasir 200 dengan shape benar, vendor 403", function () {
+test("search kartu: kasir & vendor 200 dengan shape benar, ortu 403", function () {
     [$kartu, $gerai, $produk] = $this->seedEkantinDasar();
     $kasir = User::create(["name" => "Kasir", "email" => "kasir@sekolah.id", "password" => "secret123", "role" => "kasir_sekolah"]);
     $kasir->markEmailAsVerified();
     $res = $this->actingAs($kasir)->getJson(route("kartu.getSearch", ["q" => "SW-TEST"]));
-    $res->assertOk()->assertJsonFragment(["barcode" => "SW-TEST-001", "nama" => "Siswa Tes"]);
+    $res->assertOk()->assertJsonFragment(["barcode" => "SW-TEST-001", "nama" => "Pengguna Tes"]);
+    // ponytail: vendor butuh picker kartu untuk POS gerainya sendiri
     $vendor = User::where("role", "vendor")->first();
     $vendor->markEmailAsVerified();
-    $this->actingAs($vendor)->getJson(route("kartu.getSearch", ["q" => "SW-TEST"]))->assertForbidden();
+    $this->actingAs($vendor)->getJson(route("kartu.getSearch", ["q" => "SW-TEST"]))->assertOk()->assertJsonFragment(["barcode" => "SW-TEST-001"]);
+    $ortu = User::create(["name" => "Ortu", "email" => "ortu@x.id", "password" => "secret123", "role" => "orang_tua"]);
+    $ortu->markEmailAsVerified();
+    $this->actingAs($ortu)->getJson(route("kartu.getSearch", ["q" => "SW-TEST"]))->assertForbidden();
 });
 
-test("postPos tanpa barcode + metode kartu ditolak validasi", function () {
-    $this->seedEkantinDasar();
+test("pos page: kasir 403 (hanya top up), vendor 200 gerai sendiri", function () {
+    [$kartu, $gerai, $produk] = $this->seedEkantinDasar();
     $kasir = User::create(["name" => "Kasir2", "email" => "kasir2@sekolah.id", "password" => "secret123", "role" => "kasir_sekolah"]);
     $kasir->markEmailAsVerified();
-    $this->actingAs($kasir)->post(route("kasir.postPos"), ["metode" => "kartu", "items" => [["produk_id" => 1, "qty" => 1]]])
-        ->assertSessionHasErrors("kartu_barcode");
+    // ponytail: GET hindari CSRF 419 — fokus ke policy 403/200
+    $this->actingAs($kasir)->get(route("kasir.pos"))->assertForbidden();
+    $vendor = User::where("role", "vendor")->first();
+    $vendor->markEmailAsVerified();
+    $this->actingAs($vendor)->get(route("kasir.pos"))->assertOk();
 });

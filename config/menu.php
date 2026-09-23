@@ -24,17 +24,17 @@ return [
         [
             'label' => 'Kasir',
             'items' => [
-                ['route' => 'kasir.pos', 'icon' => 'point_of_sale', 'label' => 'Kasir POS', 'match' => ['kasir.*']],
-                ['route' => 'gerai.getPesanan', 'icon' => 'notifications', 'label' => 'Pesanan Gerai', 'match' => ['gerai.getPesanan', 'gerai.postPesanan']],
+                ['route' => 'kasir.pos', 'icon' => 'point_of_sale', 'label' => 'Kasir POS', 'match' => ['kasir.*'], 'roles' => ['admin', 'super_admin', 'developer', 'vendor']],
+                ['route' => 'gerai.getPesanan', 'icon' => 'notifications', 'label' => 'Pesanan Gerai', 'match' => ['gerai.getPesanan', 'gerai.postPesanan'], 'roles' => ['admin', 'super_admin', 'developer', 'vendor', 'kasir_sekolah']],
             ],
         ],
         [
             'label' => 'Kartu & Top Up',
             'items' => [
-                ['route' => 'kartu.getTable', 'icon' => 'badge', 'label' => 'Kartu Siswa', 'match' => ['kartu.getTable','kartu.getCreate','kartu.postCreate','kartu.getUpdate','kartu.postUpdate','kartu.getDelete','kartu.postDelete','kartu.getShow','kartu.getCetak']],
+                ['route' => 'kartu.getTable', 'icon' => 'badge', 'label' => 'Kartu Pengguna', 'match' => ['kartu.getTable','kartu.getCreate','kartu.postCreate','kartu.getUpdate','kartu.postUpdate','kartu.getDelete','kartu.postDelete','kartu.getShow','kartu.getCetak']],
                 ['route' => 'kartu.getAnak', 'icon' => 'family_restroom', 'label' => 'Anak Saya', 'match' => ['kartu.getAnak']],
-                ['route' => 'topup.tunai', 'icon' => 'payments', 'label' => 'Top Up Tunai', 'match' => ['topup.tunai']],
-                ['route' => 'topup.web', 'icon' => 'account_balance_wallet', 'label' => 'Top Up Web', 'match' => ['topup.web']],
+                ['route' => 'topup.tunai', 'icon' => 'payments', 'label' => 'Top Up Tunai', 'match' => ['topup.tunai'], 'roles' => ['admin', 'super_admin', 'developer', 'kasir_sekolah']],
+                ['route' => 'topup.web', 'icon' => 'account_balance_wallet', 'label' => 'Top Up Web', 'match' => ['topup.web'], 'roles' => ['admin', 'super_admin', 'developer', 'kasir_sekolah', 'orang_tua', 'pengguna']],
             ],
         ],
         [

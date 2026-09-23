@@ -30,7 +30,7 @@ test('halaman detail transaksi menampilkan rincian item, fee, dan pembagian gera
         ->assertSee('Gerai Tes')
         ->assertSee('Fee Sistem')
         ->assertSee('(5%)')
-        ->assertSee('Saldo kartu siswa')
+        ->assertSee('Saldo kartu pengguna')
         ->assertSee('Pembagian Dana ke Gerai')
         ->assertSee('Rp1.000')
         ->assertSee('Rp20.000')

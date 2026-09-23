@@ -23,7 +23,7 @@ class KartuController extends Controller
         $default = [
             'model' => $this->model,
             'status' => KartuStatusEnum::getOptions(),
-            'siswa' => User::where('role', 'siswa')->pluck('name', 'id'),
+            'pengguna' => User::where('role', 'pengguna')->pluck('name', 'id'),
             'ortu' => User::where('role', 'orang_tua')->pluck('name', 'id'),
         ];
 
@@ -34,7 +34,7 @@ class KartuController extends Controller
     {
         $q = $this->model->query()->with(['hasUser', 'hasOrangtua'])->filter()->sort();
         $role = auth()->user()?->role;
-        if ($role === 'siswa') {
+        if ($role === 'pengguna') {
             $q->where('kartu.kartu_id_user', auth()->id());
         } elseif ($role === 'orang_tua') {
             $q->where('kartu.kartu_id_orangtua', auth()->id());
@@ -59,8 +59,8 @@ class KartuController extends Controller
         ]);
     }
 
-    // Search kartu untuk picker kasir (via Route::auto '/kartu' → kartu.getSearch).
-    // Kasir/admin saja — role lain ditolak via config/permision.php.
+    // Search kartu untuk picker POS vendor + topup kasir (via Route::auto '/kartu' → kartu.getSearch).
+    // Vendor/kasir/admin saja — orang_tua/pengguna ditolak via config/permision.php.
     public function getSearch(GeneralRequest $request)
     {
         $q = trim((string) $request->input('q', ''));
@@ -102,7 +102,7 @@ class KartuController extends Controller
         $warna = [25, 40, 142];
 
         $items = $kartu->map(fn ($k) => [
-            'nama' => $k->hasUser?->name ?? 'Siswa',
+            'nama' => $k->hasUser?->name ?? 'Pengguna',
             'nis' => $k->kartu_nis,
             'kelas' => $k->kartu_kelas,
             'barcode' => $k->kartu_barcode,
@@ -111,7 +111,7 @@ class KartuController extends Controller
             'qr_png' => $barcode2D->getBarcodePNG($k->kartu_barcode, 'QRCODE', 8, 8, $warna, [255, 255, 255]),
         ])->all();
 
-        $filename = 'kartu-siswa'
+        $filename = 'kartu-pengguna'
             . ($request->filled('kartu_kelas') ? '-'.$request->input('kartu_kelas') : '')
             . '-'.now()->format('YmdHis').'.pdf';
 

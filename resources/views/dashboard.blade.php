@@ -53,7 +53,7 @@
             @if($recentTransaksi->isNotEmpty())
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead><tr class="text-left text-xs uppercase text-on-surface-variant border-b"><th class="pb-2">Waktu</th><th class="pb-2">Siswa</th><th class="pb-2">Gerai</th><th class="pb-2">Total</th><th class="pb-2">Fee</th><th class="pb-2">Bersih</th></tr></thead>
+                    <thead><tr class="text-left text-xs uppercase text-on-surface-variant border-b"><th class="pb-2">Waktu</th><th class="pb-2">Pengguna</th><th class="pb-2">Gerai</th><th class="pb-2">Total</th><th class="pb-2">Fee</th><th class="pb-2">Bersih</th></tr></thead>
                     <tbody>
                         @foreach($recentTransaksi as $tr)
                         <tr class="border-b border-outline-variant/50">
@@ -191,8 +191,8 @@
             {!! $spendingChart->script() !!}
         @endpush
 
-        @elseif(!empty($isSiswa) && $isSiswa)
-        {{-- Siswa dashboard --}}
+        @elseif(!empty($isPengguna) && $isPengguna)
+        {{-- Pengguna dashboard --}}
         <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
             <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
                 <div class="flex items-center gap-2 mb-1"><span class="material-symbols-outlined text-primary">badge</span><span class="text-[11px] font-semibold uppercase text-on-surface-variant">Kartu</span></div>
@@ -201,13 +201,13 @@
             </div>
             <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
                 <div class="flex items-center gap-2 mb-1"><span class="material-symbols-outlined text-success">account_balance_wallet</span><span class="text-[11px] font-semibold uppercase text-on-surface-variant">Saldo</span></div>
-                <div class="text-lg font-bold text-success">{{ formatAngka((int)($statsSiswa['saldo'] ?? 0),'Rp') }}</div>
-                <div class="text-xs text-on-surface-variant">Sisa limit {{ isset($statsSiswa['sisa_limit']) && $statsSiswa['sisa_limit']!==null ? formatAngka((int)$statsSiswa['sisa_limit'],'Rp') : 'tanpa limit' }}</div>
+                <div class="text-lg font-bold text-success">{{ formatAngka((int)($statsPengguna['saldo'] ?? 0),'Rp') }}</div>
+                <div class="text-xs text-on-surface-variant">Sisa limit {{ isset($statsPengguna['sisa_limit']) && $statsPengguna['sisa_limit']!==null ? formatAngka((int)$statsPengguna['sisa_limit'],'Rp') : 'tanpa limit' }}</div>
             </div>
             <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
                 <div class="flex items-center gap-2 mb-1"><span class="material-symbols-outlined text-warning">today</span><span class="text-[11px] font-semibold uppercase text-on-surface-variant">Jajan Hari Ini</span></div>
-                <div class="text-lg font-bold">{{ $statsSiswa['transaksi_hari_ini'] ?? 0 }}x</div>
-                <div class="text-xs text-on-surface-variant">{{ formatAngka((int)($statsSiswa['pakai_hari_ini'] ?? 0),'Rp') }} • Fee {{ formatAngka((int)($statsSiswa['fee_hari_ini'] ?? 0),'Rp') }}</div>
+                <div class="text-lg font-bold">{{ $statsPengguna['transaksi_hari_ini'] ?? 0 }}x</div>
+                <div class="text-xs text-on-surface-variant">{{ formatAngka((int)($statsPengguna['pakai_hari_ini'] ?? 0),'Rp') }} • Fee {{ formatAngka((int)($statsPengguna['fee_hari_ini'] ?? 0),'Rp') }}</div>
             </div>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
@@ -224,8 +224,8 @@
                     <div class="flex justify-between text-sm mt-2"><span>Saldo</span><span class="font-bold">{{ formatAngka((int)$kartu->kartu_saldo,'Rp') }}</span></div>
                     <div class="flex justify-between text-xs"><span>Limit</span><span>{{ $kartu->kartu_limit_harian ? formatAngka((int)$kartu->kartu_limit_harian,'Rp') : 'Tanpa limit' }}</span></div>
                     @if($kartu->kartu_limit_harian)
-                    <div class="w-full bg-surface-container-lowest rounded-full h-2 mt-2"><div class="bg-primary h-2 rounded-full" style="width: {{ min(100, ($statsSiswa['pakai_hari_ini']/$kartu->kartu_limit_harian)*100) }}%"></div></div>
-                    <div class="text-[10px] text-on-surface-variant">Pakai {{ formatAngka((int)$statsSiswa['pakai_hari_ini'],'Rp') }} / {{ formatAngka((int)$kartu->kartu_limit_harian,'Rp') }}</div>
+                    <div class="w-full bg-surface-container-lowest rounded-full h-2 mt-2"><div class="bg-primary h-2 rounded-full" style="width: {{ min(100, ($statsPengguna['pakai_hari_ini']/$kartu->kartu_limit_harian)*100) }}%"></div></div>
+                    <div class="text-[10px] text-on-surface-variant">Pakai {{ formatAngka((int)$statsPengguna['pakai_hari_ini'],'Rp') }} / {{ formatAngka((int)$kartu->kartu_limit_harian,'Rp') }}</div>
                     @endif
                 </div>
                 @else
@@ -309,7 +309,7 @@
             <h3 class="font-semibold pb-3 mb-3 border-b flex items-center gap-2"><span class="material-symbols-outlined text-primary">history</span> Transaksi Terbaru</h3>
             @if($recentTransaksi->isNotEmpty())
             <div class="hidden md:block overflow-x-auto">
-                <table class="w-full text-sm"><thead><tr class="text-left text-xs uppercase text-on-surface-variant border-b"><th class="pb-2">Waktu</th><th class="pb-2">Siswa</th><th class="pb-2">Total</th><th class="pb-2">Status</th></tr></thead><tbody>
+                <table class="w-full text-sm"><thead><tr class="text-left text-xs uppercase text-on-surface-variant border-b"><th class="pb-2">Waktu</th><th class="pb-2">Pengguna</th><th class="pb-2">Total</th><th class="pb-2">Status</th></tr></thead><tbody>
                     @foreach($recentTransaksi as $tr)
                     <tr class="border-b border-outline-variant/50"><td class="py-2 text-xs">{{ formatDate($tr->created_at,true) }}</td><td class="py-2">{{ $tr->hasKartu?->hasUser?->name ?? '-' }}</td><td class="py-2 font-mono">{{ formatAngka((int)$tr->transaksi_total,'Rp') }}</td><td class="py-2"><x-badge :type="$tr->transaksi_status==='berhasil'?'success':'warning'">{{ $tr->transaksi_status }}</x-badge></td></tr>
                     @endforeach

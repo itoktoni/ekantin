@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title>Kartu Siswa</title>
+    <title>Kartu Pengguna</title>
     <style>
         @page { margin: 10mm 8mm; }
         body {
@@ -97,7 +97,7 @@
 </head>
 <body>
     <div class="judul">
-        <h1>Kartu Siswa {{ $sekolah }}</h1>
+        <h1>Kartu Pengguna {{ $sekolah }}</h1>
         @if ($kelas)
             <p>Kelas {{ $kelas }} &middot; {{ count($items) }} kartu</p>
         @else
@@ -115,7 +115,7 @@
                         <table style="width:100%; border-collapse:collapse;">
                             <tr>
                                 <td style="text-align:left;"><span class="brand">{{ $sekolah }}</span></td>
-                                <td style="text-align:right;"><span class="jenis">Kartu Siswa</span></td>
+                                <td style="text-align:right;"><span class="jenis">Kartu Pengguna</span></td>
                             </tr>
                         </table>
                     </div>

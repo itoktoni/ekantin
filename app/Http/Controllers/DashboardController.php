@@ -46,20 +46,20 @@ class DashboardController extends Controller
                 'kartus' => $kartus,
                 'statsOrtu' => $statsOrtu,
                 'recentTransaksi' => $recentTransaksi,
-            ])->with('spendingChart', $spendingChart)->with('isGerai', false)->with('isSiswa', false);
+            ])->with('spendingChart', $spendingChart)->with('isGerai', false)->with('isPengguna', false);
         }
 
-        // Siswa: dashboard kartu sendiri
-        if ($role === 'siswa') {
+        // Pengguna: dashboard kartu sendiri
+        if ($role === 'pengguna') {
             $kartu = \App\Models\Kartu::where('kartu_id_user', $user->id)->with('hasUser')->first();
             if (!$kartu) {
-                return view('dashboard', ['isSiswa'=>true, 'kartu'=>null, 'statsSiswa'=>null, 'recentTransaksi'=>collect(), 'isGerai'=>false, 'isOrtu'=>false]);
+                return view('dashboard', ['isPengguna'=>true, 'kartu'=>null, 'statsPengguna'=>null, 'recentTransaksi'=>collect(), 'isGerai'=>false, 'isOrtu'=>false]);
             }
             $hariIni = today();
             $pakaiHariIni = Transaksi::where('transaksi_id_kartu', $kartu->kartu_id)->whereDate('created_at', $hariIni)->where('transaksi_jenis','beli')->where('transaksi_status','berhasil')->sum('transaksi_total');
             $feeHariIni = Transaksi::where('transaksi_id_kartu', $kartu->kartu_id)->whereDate('created_at', $hariIni)->where('transaksi_jenis','beli')->where('transaksi_status','berhasil')->get()->sum(fn($t) => $t->feeTotal());
             $recentTransaksi = Transaksi::with(['hasItems.hasGerai'])->where('transaksi_id_kartu', $kartu->kartu_id)->latest('transaksi_id')->limit(5)->get();
-            $statsSiswa = [
+            $statsPengguna = [
                 'saldo' => (int) $kartu->kartu_saldo,
                 'limit' => $kartu->kartu_limit_harian,
                 'pakai_hari_ini' => (int) $pakaiHariIni,
@@ -69,9 +69,9 @@ class DashboardController extends Controller
             ];
             $spendingChart = $chart->ortuSpendingHarian([$kartu->kartu_id]);
             return view('dashboard', [
-                'isSiswa' => true,
+                'isPengguna' => true,
                 'kartu' => $kartu,
-                'statsSiswa' => $statsSiswa,
+                'statsPengguna' => $statsPengguna,
                 'recentTransaksi' => $recentTransaksi,
             ])->with('spendingChart', $spendingChart)->with('isGerai', false)->with('isOrtu', false);
         }
@@ -143,7 +143,7 @@ class DashboardController extends Controller
                 'statsKasir' => $statsKasir,
                 'recentTransaksi' => $recentTransaksi,
             ])->with('kasirChart', $chart->kasirTransaksiHarian())
-              ->with('isGerai', false)->with('isOrtu', false)->with('isSiswa', false);
+              ->with('isGerai', false)->with('isOrtu', false)->with('isPengguna', false);
         }
 
         // Super admin: dashboard ekantin menyeluruh
@@ -188,6 +188,6 @@ class DashboardController extends Controller
             ->with('ekantinChart', $ekantinChart)
             ->with('fees', $fees)
             ->with('feeBulan', $feeBulan)
-            ->with('isGerai', false)->with('isOrtu', false)->with('isSiswa', false)->with('isKasir', false);
+            ->with('isGerai', false)->with('isOrtu', false)->with('isPengguna', false)->with('isKasir', false);
     }
 }

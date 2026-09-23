@@ -15,12 +15,15 @@ final class PenarikanStatusEnum extends Enum
 
     const DITOLAK = 'ditolak';
 
+    const DIBATALKAN = 'dibatalkan';
+
     public static function getDescription(mixed $value): string
     {
         return match ($value) {
             self::DIAJUKAN => 'Diajukan',
             self::SELESAI => 'Diselesaikan',
             self::DITOLAK => 'Ditolak',
+            self::DIBATALKAN => 'Dibatalkan',
             default => parent::getDescription($value),
         };
     }

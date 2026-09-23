@@ -5,15 +5,15 @@
     $feePersen = \App\Models\Fee::persenMap();
     $feeNama = \App\Models\Fee::namaMap();
     $totalPotong = (int) $trx->transaksi_total + $feeTotal;
-    $namaSiswa = $trx->hasKartu?->hasUser?->name ?? '-';
-    $barcodeSiswa = $trx->hasKartu?->kartu_barcode ?? '-';
+    $namaPengguna = $trx->hasKartu?->hasUser?->name ?? '-';
+    $barcodePengguna = $trx->hasKartu?->kartu_barcode ?? '-';
     $nis = $trx->hasKartu?->kartu_nis ?? null;
     $kelas = $trx->hasKartu?->kartu_kelas ?? null;
     $kasirNama = $trx->hasKasir?->name ?? auth()->user()?->name ?? '-';
     $bluetoothPayload = [
         'id' => $trx->transaksi_id,
-        'siswa' => $namaSiswa,
-        'barcode' => $barcodeSiswa,
+        'pengguna' => $namaPengguna,
+        'barcode' => $barcodePengguna,
         'tanggal' => formatDate($trx->created_at, 'd/m/Y H:i'),
         'kasir' => $kasirNama,
         'items' => $trx->hasItems->map(function ($i) {
@@ -55,12 +55,12 @@
                 @endif
             </div>
             <div class="r-line">--------------------------------</div>
-            <div class="r-siswa">
-                <div class="r-siswa-name">{{ $namaSiswa }}</div>
-                <div class="r-siswa-meta">{{ $barcodeSiswa }}@if($nis) • {{ $nis }}@endif @if($kelas) • {{ $kelas }}@endif</div>
+            <div class="r-pengguna">
+                <div class="r-pengguna-name">{{ $namaPengguna }}</div>
+                <div class="r-pengguna-meta">{{ $barcodePengguna }}@if($nis) • {{ $nis }}@endif @if($kelas) • {{ $kelas }}@endif</div>
                 @if($trx->hasKartu)
                 <div class="r-barcode">
-                    @php try{ if(class_exists(\Milon\Barcode\Facades\DNS1D::class)) echo \Milon\Barcode\Facades\DNS1D::getBarcodeHTML($barcodeSiswa,'C128',1,16); }catch(Throwable $e){} @endphp
+                    @php try{ if(class_exists(\Milon\Barcode\Facades\DNS1D::class)) echo \Milon\Barcode\Facades\DNS1D::getBarcodeHTML($barcodePengguna,'C128',1,16); }catch(Throwable $e){} @endphp
                 </div>
                 @endif
             </div>
@@ -123,7 +123,7 @@
             lines.push({text:'E-KANTIN GERAI REPRINT',style:'large',align:'center'});
             lines.push({divider:true});
             lines.push({text:'No #'+String(trx.id).padStart(6,'0')+'  '+trx.tanggal,style:'normal'});
-            lines.push({text:'Siswa: '+trx.siswa+' ('+trx.barcode+')',style:'bold'});
+            lines.push({text:'Pengguna: '+trx.pengguna+' ('+trx.barcode+')',style:'bold'});
             lines.push({divider:true});
             trx.items.forEach(it=>{lines.push({text:it.name,style:'normal'});lines.push({text:'  '+it.qty+' x '+new Intl.NumberFormat('id-ID').format(it.price)+' = '+new Intl.NumberFormat('id-ID').format(it.qty*it.price),style:'normal'});});
             lines.push({divider:true});
@@ -152,9 +152,9 @@
         .r-mono{font-family:monospace;font-size:9px}
         .r-trunc{max-width:30mm;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block}
         .r-trunc2{max-width:34mm;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block}
-        .r-siswa{text-align:center;margin:0}
-        .r-siswa-name{font-size:14px;font-weight:900;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .r-siswa-meta{font-size:9px;color:#444;margin-top:1px}
+        .r-pengguna{text-align:center;margin:0}
+        .r-pengguna-name{font-size:14px;font-weight:900;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .r-pengguna-meta{font-size:9px;color:#444;margin-top:1px}
         .r-barcode{margin:1.5mm 0 0;display:flex;justify-content:center}
         .r-barcode svg{max-width:48mm !important;height:14mm !important}
         .r-gerai{font-size:9px;font-weight:800;background:#f0f0f0;padding:1mm 1.5mm;margin:1.5mm -1.5mm 1.2mm;letter-spacing:0.04em}
@@ -196,8 +196,8 @@
             .receipt-58mm .r-addr{font-size:5.5px!important}
             .receipt-58mm .r-line{font-size:6px!important;margin:1.2mm 0!important}
             .receipt-58mm .r-meta,.receipt-58mm .r-meta b{font-size:6px!important}
-            .receipt-58mm .r-siswa-name{font-size:9px!important}
-            .receipt-58mm .r-siswa-meta{font-size:5.5px!important}
+            .receipt-58mm .r-pengguna-name{font-size:9px!important}
+            .receipt-58mm .r-pengguna-meta{font-size:5.5px!important}
             .receipt-58mm .r-barcode svg{max-width:44mm!important;height:11mm!important}
             .receipt-58mm .r-gerai{font-size:5.5px!important}
             .receipt-58mm .r-items,.receipt-58mm .r-item-name{font-size:6px!important}

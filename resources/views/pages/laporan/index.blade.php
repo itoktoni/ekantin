@@ -20,13 +20,13 @@
                 <x-input col="2" type="date" name="sampai" label="Sampai Tanggal" />
                 <x-select col="2" name="transaksi_jenis" label="Jenis" :options="['' => 'Semua'] + $jenis" />
                 <x-select col="2" name="transaksi_status" label="Status" :options="['' => 'Semua'] + $status" />
-                <x-select col="4" name="transaksi_id_kartu" label="Siswa" :options="['' => 'Semua Siswa'] + ($kartuOptions ?? [])" />
+                <x-select col="4" name="transaksi_id_kartu" label="Pengguna" :options="['' => 'Semua Pengguna'] + ($kartuOptions ?? [])" />
                 <div class="col-span-12 flex flex-wrap gap-2 mt-2">
                     <x-button variant="primary" type="submit" icon="search">Tampilkan</x-button>
                     <a href="{{ route('laporan.index') }}" class="inline-flex items-center h-10 px-4 text-sm rounded-xl border border-outline-variant">Reset</a>
                     <span class="text-xs text-on-surface-variant self-center ml-2">{{ $ringkas['jumlah'] }} data • {{ request('dari') ? formatDate(request('dari')) : 'awal' }} → {{ request('sampai') ? formatDate(request('sampai')) : 'hari ini' }}</span>
                     @if(!empty($filterKartu))
-                    <span class="inline-flex items-center gap-1.5 h-9 px-3 text-xs font-semibold rounded-full bg-primary/10 text-primary border border-primary/20">Siswa: {{ $filterKartu->hasUser?->name ?? $filterKartu->kartu_barcode }} • {{ $filterKartu->kartu_barcode }}@if($filterKartu->kartu_nis) • {{ $filterKartu->kartu_nis }}@endif</span>
+                    <span class="inline-flex items-center gap-1.5 h-9 px-3 text-xs font-semibold rounded-full bg-primary/10 text-primary border border-primary/20">Pengguna: {{ $filterKartu->hasUser?->name ?? $filterKartu->kartu_barcode }} • {{ $filterKartu->kartu_barcode }}@if($filterKartu->kartu_nis) • {{ $filterKartu->kartu_nis }}@endif</span>
                     @endif
                 </div>
             </x-card>
@@ -64,7 +64,7 @@
         <x-table>
             <x-slot:head>
                 <th>Tanggal</th>
-                <th>Siswa</th>
+                <th>Pengguna</th>
                 <th>Gerai</th>
                 <th>Jenis</th>
                 <th>Total</th>

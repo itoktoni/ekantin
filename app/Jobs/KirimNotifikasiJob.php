@@ -27,10 +27,10 @@ class KirimNotifikasiJob implements ShouldQueue
         if (! $trx) {
             return;
         }
-        $nama = $trx->hasKartu?->hasUser?->name ?? 'Siswa';
+        $nama = $trx->hasKartu?->hasUser?->name ?? 'Pengguna';
         $gerai = $trx->hasGerai?->gerai_nama ?? '-';
         $item = $trx->hasItems->map(fn ($i) => "{$i->item_nama} x{$i->item_qty}")->join(', ');
-        $isi = "Ananda {$nama} jajan di {$gerai}: {$item}. Total Rp".number_format((int) $trx->transaksi_total, 0, ',', '.').'. Saldo Rp'.number_format((int) $trx->transaksi_saldo_akhir, 0, ',', '.');
+        $isi = "{$nama} jajan di {$gerai}: {$item}. Total Rp".number_format((int) $trx->transaksi_total, 0, ',', '.').'. Saldo Rp'.number_format((int) $trx->transaksi_saldo_akhir, 0, ',', '.');
         $log->increment('notif_percobaan');
         $ok = NotificationChannelFactory::create('log')->send($nama, 'Notifikasi e-Kanteen', $isi);
         $log->update(['notif_status' => $ok ? 'terkirim' : ($log->notif_percobaan >= 3 ? 'gagal' : 'menunggu')]);

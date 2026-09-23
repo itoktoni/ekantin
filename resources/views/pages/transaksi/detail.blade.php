@@ -76,7 +76,7 @@
         @if ($model->hasKartu)
         <x-card label="Pembayar — Saldo Kartu" icon="badge">
             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
-                <p class="text-xs text-on-surface-variant uppercase tracking-wide">Siswa</p>
+                <p class="text-xs text-on-surface-variant uppercase tracking-wide">Pengguna</p>
                 <p class="text-sm font-semibold text-on-surface">{{ $model->hasKartu->hasUser?->name ?? '-' }}</p>
             </div>
 
@@ -193,7 +193,7 @@
             <div class="col-span-12 lg:col-span-6 space-y-2 rounded-xl bg-surface-container px-4 py-4">
                 <div class="flex items-center justify-between text-sm">
                     <span class="text-on-surface-variant">Fee ditanggung oleh</span>
-                    <span class="font-semibold text-on-surface">Saldo kartu siswa</span>
+                    <span class="font-semibold text-on-surface">Saldo kartu pengguna</span>
                 </div>
                 <div class="flex items-center justify-between text-sm">
                     <span class="text-on-surface-variant">Total dipotong dari saldo kartu</span>
@@ -208,7 +208,7 @@
                     <span class="font-data-mono font-bold text-on-surface">{{ $uang($model->transaksi_bersih) }}</span>
                 </div>
                 <p class="text-xs text-on-surface-variant pt-1 border-t border-outline-variant/60">
-                    Siswa membayar total belanja ditambah fee penuh; penerimaan gerai dipotong fee sesuai proporsi belanjanya.
+                    Pengguna membayar total belanja ditambah fee penuh; penerimaan gerai dipotong fee sesuai proporsi belanjanya.
                 </p>
             </div>
             @elseif ($model->transaksi_jenis === 'refund')
@@ -230,7 +230,7 @@
             <div class="col-span-12 lg:col-span-6 space-y-2 rounded-xl bg-surface-container px-4 py-4">
                 <div class="flex items-center justify-between text-sm">
                     <span class="text-on-surface-variant">Fee ditanggung oleh</span>
-                    <span class="font-semibold text-on-surface">Dikembalikan ke saldo kartu siswa</span>
+                    <span class="font-semibold text-on-surface">Dikembalikan ke saldo kartu pengguna</span>
                 </div>
                 @if ($model->transaksi_id_reversal_of)
                 <div class="flex items-center justify-between text-sm">
@@ -289,7 +289,7 @@
             <div class="col-span-12 lg:col-span-6 space-y-2 rounded-xl bg-surface-container px-4 py-4">
                 <div class="flex items-center justify-between text-sm">
                     <span class="text-on-surface-variant">Fee ditanggung oleh</span>
-                    <span class="font-semibold text-on-surface">{{ $feeTotal > 0 ? 'Saldo kartu siswa' : 'Tidak ada fee' }}</span>
+                    <span class="font-semibold text-on-surface">{{ $feeTotal > 0 ? 'Saldo kartu pengguna' : 'Tidak ada fee' }}</span>
                 </div>
                 @if ($feeTotal > 0)
                 <div class="flex items-center justify-between text-sm">

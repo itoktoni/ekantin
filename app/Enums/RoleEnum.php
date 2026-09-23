@@ -25,7 +25,7 @@ final class RoleEnum extends Enum
 
     const ORANG_TUA = 'orang_tua';
 
-    const SISWA = 'siswa';
+    const PENGGUNA = 'pengguna';
 
     public static function getDescription(mixed $value): string
     {
@@ -38,7 +38,7 @@ final class RoleEnum extends Enum
             self::KASIR_SEKOLAH => 'Kasir Sekolah',
             self::VENDOR => 'Vendor',
             self::ORANG_TUA => 'Orang Tua',
-            self::SISWA => 'Siswa',
+            self::PENGGUNA => 'Pengguna',
             default => parent::getDescription($value),
         };
     }

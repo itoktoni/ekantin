@@ -26,7 +26,7 @@
             <x-slot:head>
                 <x-table-checkbox :model="$model" onchange="toggleAll(this)" />
                 <th>Actions</th>
-                <th>Siswa</th>
+                <th>Pengguna</th>
                 @foreach ($model::$sortColumns as $column)
                 <x-table-sort field="{{ $column }}" label="{{ formatLabel($column) }}" :sortField="$sortField" :sortDir="$sortDir" />
                 @endforeach

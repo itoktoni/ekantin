@@ -17,8 +17,8 @@ uses(RefreshDatabase::class);
 test('seeder master data terisi lengkap dan idempoten', function () {
     $this->seed([EkantinSeeder::class, EkantinUserSeeder::class, EkantinGeraiSeeder::class, EkantinProdukSeeder::class, EkantinKartuSeeder::class]);
     $this->seed([EkantinSeeder::class, EkantinUserSeeder::class, EkantinGeraiSeeder::class, EkantinProdukSeeder::class, EkantinKartuSeeder::class]);
-    // ponytail: seeder membuat 3 vendor + 2 ortu + 5 siswa = 10 (bukan 9) — ekspektasi lama basi, sudah merah sebelum fee work.
-    expect(User::whereIn('role', ['vendor', 'orang_tua', 'siswa'])->count())->toBe(10)
+    // ponytail: seeder membuat 3 vendor + 2 ortu + 5 pengguna = 10 (bukan 9) — ekspektasi lama basi, sudah merah sebelum fee work.
+    expect(User::whereIn('role', ['vendor', 'orang_tua', 'pengguna'])->count())->toBe(10)
         ->and(Gerai::count())->toBe(3)
         ->and(Produk::where('produk_status', 'tersedia')->count())->toBe(10)
         ->and(Kartu::where('kartu_status', 'aktif')->count())->toBe(5)

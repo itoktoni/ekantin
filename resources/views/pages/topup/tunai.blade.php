@@ -4,8 +4,8 @@
     <x-breadcrumb :items="[['url' => '/dashboard', 'label' => 'Home'], ['url' => '', 'label' => 'Top Up Tunai']]" />
 
     <x-form :model="$model" :action="route('topup.tunai')" :method="'GET'">
-        <x-card label="Cari Kartu — Scan atau Pilih Siswa">
-            <x-select col="9" name="kartu_barcode" label="Pilih Siswa / Scan Barcode" :options="['' => '-- Ketik atau Scan --'] + ($kartuOptions ?? [])" class="search" :default="$kartu?->kartu_barcode ?? request('kartu_barcode') ?? request('kartu')" />
+        <x-card label="Cari Kartu — Scan atau Pilih Pengguna">
+            <x-select col="9" name="kartu_barcode" label="Pilih Pengguna / Scan Barcode" :options="['' => '-- Ketik atau Scan --'] + ($kartuOptions ?? [])" class="search" :default="$kartu?->kartu_barcode ?? request('kartu_barcode') ?? request('kartu')" />
             <div class="col-span-3 flex items-end gap-2">
                 <button type="button" onclick="startScanTunai('kartu_barcode')" class="inline-flex items-center gap-1 h-10 px-4 text-xs font-semibold rounded-xl border border-outline-variant bg-surface-container"><span class="material-symbols-outlined text-sm">qr_code_scanner</span> Scan</button>
                 <x-button variant="primary" class="flex-1" type="submit">Cari</x-button>
@@ -41,7 +41,7 @@
         <x-card label="Konfirmasi Top Up Tunai">
             <input type="hidden" name="kartu_barcode" value="{{ $kartu->kartu_barcode }}">
             <div class="col-span-12">
-                <p class="text-sm">Siswa: <strong>{{ $kartu->hasUser?->name ?? '-' }}</strong> ({{ $kartu->kartu_nis ?? '-' }} / {{ $kartu->kartu_kelas ?? '-' }})</p>
+                <p class="text-sm">Pengguna: <strong>{{ $kartu->hasUser?->name ?? '-' }}</strong> ({{ $kartu->kartu_nis ?? '-' }} / {{ $kartu->kartu_kelas ?? '-' }})</p>
                 <p class="text-sm">Saldo terkini: <strong>Rp{{ number_format((int) $kartu->kartu_saldo, 0, ',', '.') }}</strong></p>
             </div>
             <x-input col="6" type="number" name="nominal" label="Nominal Tunai (Rp)" />

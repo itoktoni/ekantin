@@ -26,7 +26,7 @@
             <x-slot:head>
                 <x-table-checkbox :model="$model" onchange="toggleAll(this)" />
                 <th>Actions</th>
-                <th>Siswa</th>
+                <th>Pengguna</th>
                 <x-table-sort field="transaksi_jenis" label="Jenis" :sortField="$sortField" :sortDir="$sortDir" />
                 <x-table-sort field="transaksi_status" label="Status" :sortField="$sortField" :sortDir="$sortDir" />
                 <x-table-sort field="transaksi_total" label="Total" :sortField="$sortField" :sortDir="$sortDir" />
@@ -39,7 +39,7 @@
                 @foreach($data as $table)
                 @php
                     $feeTotal = $table->feeTotal();
-                    $namaSiswa = $table->hasKartu?->hasUser?->name ?? $table->hasKartu?->kartu_nis ?? '-';
+                    $namaPengguna = $table->hasKartu?->hasUser?->name ?? $table->hasKartu?->kartu_nis ?? '-';
                 @endphp
                 <tr>
                     <x-table-row-checkbox :model="$model" :value="$table->field_primary" />
@@ -50,7 +50,7 @@
                     </x-table-action>
                     <td>
                         <div class="flex flex-col">
-                            <span class="text-sm font-semibold text-on-surface truncate max-w-[160px]">{{ $namaSiswa }}</span>
+                            <span class="text-sm font-semibold text-on-surface truncate max-w-[160px]">{{ $namaPengguna }}</span>
                             @if($table->hasKartu)
                             <span class="text-[11px] text-on-surface-variant font-mono">{{ $table->hasKartu->kartu_barcode }} @if($table->hasKartu->kartu_nis) • {{ $table->hasKartu->kartu_nis }} @endif</span>
                             @endif
@@ -72,10 +72,10 @@
                     @foreach($data as $table)
                     @php
                         $feeTotalM = $table->feeTotal();
-                        $namaSiswaM = $table->hasKartu?->hasUser?->name ?? $table->hasKartu?->kartu_nis ?? '-';
+                        $namaPenggunaM = $table->hasKartu?->hasUser?->name ?? $table->hasKartu?->kartu_nis ?? '-';
                     @endphp
                     <div class="border border-outline-variant rounded-xl p-4 bg-surface-container-lowest shadow-sm hover:border-primary/40 cursor-pointer" data-id="{{ $table->field_primary }}" onclick="window.location='{{ moduleRoute('getUpdate', ['id' => $table->field_primary]) }}'">
-                        <p class="text-sm font-bold text-on-surface truncate mb-1">{{ $namaSiswaM }}</p>
+                        <p class="text-sm font-bold text-on-surface truncate mb-1">{{ $namaPenggunaM }}</p>
                         <p class="text-xs font-mono text-on-surface-variant truncate mb-3">{{ $table->transaksi_jenis }} • {{ formatAngka((int) $table->transaksi_total, 'Rp') }} @if($feeTotalM>0) <span class="text-error">-{{ formatAngka($feeTotalM, 'Rp') }} fee</span> @endif</p>
                         <div class="grid grid-cols-2 gap-3 mb-3">
                             <div>

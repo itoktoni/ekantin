@@ -8,7 +8,7 @@
             @bind($model ?? null)
 
                 <x-input col="6" name="kartu_barcode" />
-                <x-select col="6" name="kartu_id_user" label="Siswa" :options="$siswa" />
+                <x-select col="6" name="kartu_id_user" label="Pengguna" :options="$pengguna" />
                 <x-select col="6" name="kartu_id_orangtua" label="Orang Tua" :options="$ortu" />
                 <x-input col="3" name="kartu_nis" label="NIS" />
                 <x-input col="3" name="kartu_kelas" label="Kelas" />

@@ -30,7 +30,7 @@ class TransaksiController extends Controller
         return array_merge($default, $data);
     }
 
-    // Vendor hanya boleh melihat transaksi yang menyentuh gerainya. Orang tua/siswa hanya transaksi anaknya.
+    // Vendor hanya boleh melihat transaksi yang menyentuh gerainya. Orang tua/pengguna hanya transaksi anaknya.
     protected function scopedQuery()
     {
         $q = $this->model->query();
@@ -41,7 +41,7 @@ class TransaksiController extends Controller
                 $w->whereIn('transaksi.transaksi_id_gerai', $ids)
                     ->orWhereHas('hasItems', fn ($i) => $i->whereIn('item_id_gerai', $ids));
             });
-        } elseif ($role === 'siswa') {
+        } elseif ($role === 'pengguna') {
             $q->where('transaksi.transaksi_id_kartu', function ($qq) {
                 $qq->select('kartu_id')->from('kartu')->where('kartu_id_user', auth()->id())->limit(1);
             });
@@ -57,16 +57,16 @@ class TransaksiController extends Controller
     protected function getData()
     {
         $q = $this->scopedQuery()->with(['hasKartu.hasUser']);
-        // filter virtual: nama_siswa & barcode via hasKartu
+        // filter virtual: nama_pengguna & barcode via hasKartu
         $filters = request()->input('filters', []);
         $virtualHandled = false;
-        foreach (['nama_siswa','barcode'] as $vf) {
+        foreach (['nama_pengguna','barcode'] as $vf) {
             if (isset($filters[$vf])) {
                 $cond = $filters[$vf];
                 $val = is_array($cond) ? ($cond['$contains'] ?? $cond['$eq'] ?? reset($cond)) : $cond;
                 $val = is_string($val) ? trim($val) : $val;
                 if ($val !== '' && $val !== null) {
-                    if ($vf === 'nama_siswa') {
+                    if ($vf === 'nama_pengguna') {
                         $q->whereHas('hasKartu.hasUser', fn($qq) => $qq->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($val).'%']));
                     } elseif ($vf === 'barcode') {
                         $q->whereHas('hasKartu', fn($qq) => $qq->whereRaw('LOWER(kartu_barcode) LIKE ?', ['%'.strtolower($val).'%']));

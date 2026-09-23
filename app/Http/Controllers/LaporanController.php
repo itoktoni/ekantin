@@ -52,7 +52,7 @@ class LaporanController extends Controller
                 $w->whereIn('transaksi.transaksi_id_gerai', $ids)
                     ->orWhereHas('hasItems', fn ($i) => $i->whereIn('item_id_gerai', $ids));
             });
-        } elseif (in_array($role, ['orang_tua', 'siswa'])) {
+        } elseif (in_array($role, ['orang_tua', 'pengguna'])) {
             $ids = Kartu::where('kartu_id_user', auth()->id())->orWhere('kartu_id_orangtua', auth()->id())->pluck('kartu_id');
             $q->whereIn('transaksi.transaksi_id_kartu', $ids);
         }
@@ -91,10 +91,10 @@ class LaporanController extends Controller
         $role = auth()->user()?->role;
         if ($role === 'orang_tua') {
             $kartuQ->where('kartu_id_orangtua', auth()->id());
-        } elseif ($role === 'siswa') {
+        } elseif ($role === 'pengguna') {
             $kartuQ->where('kartu_id_user', auth()->id());
         } elseif ($role === 'vendor') {
-            // vendor tidak filter kartu, tapi tetap tampil siswa yang pernah transaksi di gerainya
+            // vendor tidak filter kartu, tapi tetap tampil pengguna yang pernah transaksi di gerainya
             $ids = Gerai::where('gerai_id_vendor', auth()->id())->pluck('gerai_id');
             $kartuIds = Transaksi::where(function($w) use ($ids){ $w->whereIn('transaksi_id_gerai',$ids)->orWhereHas('hasItems', fn($q)=>$q->whereIn('item_id_gerai',$ids)); })->pluck('transaksi_id_kartu')->unique()->filter();
             if ($kartuIds->isNotEmpty()) $kartuQ->whereIn('kartu_id', $kartuIds);
@@ -128,7 +128,7 @@ class LaporanController extends Controller
 
         return response()->streamDownload(function () use ($rows) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['tanggal', 'siswa', 'gerai', 'jenis', 'total', 'fee_kelola', 'fee_sistem', 'bersih', 'saldo_akhir', 'status']);
+            fputcsv($out, ['tanggal', 'pengguna', 'gerai', 'jenis', 'total', 'fee_kelola', 'fee_sistem', 'bersih', 'saldo_akhir', 'status']);
             foreach ($rows as $r) {
                 fputcsv($out, [
                     $r->created_at?->format('d/m/Y H:i'),

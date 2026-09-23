@@ -28,26 +28,26 @@
             <input type="hidden" name="metode" id="metodeInput" value="kartu">
             <div class="mb-2.5 flex gap-1.5" role="group" aria-label="Mode pembeli">
                 <button type="button" id="modeKartu" class="chip" aria-pressed="true">
-                    <span class="material-symbols-outlined">badge</span> Kartu siswa
+                    <span class="material-symbols-outlined">badge</span> Kartu Pembayaran
                 </button>
                 <button type="button" id="modeWalkin" class="chip" aria-pressed="false">
                     <span class="material-symbols-outlined">person</span> Walk-in
                 </button>
             </div>
 
-            {{-- ① Kartu siswa + cari produk --}}
-            <div class="grid gap-2.5 md:grid-cols-2">
+            {{-- ① Kartu pengguna + cari produk --}}
+            <div class="grid gap-2.5 md:grid-cols-2 mt-4">
                 <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-3">
                     <label for="kartu_barcode" class="flex items-center gap-1.5 text-[13px] font-bold text-on-surface">
                         <span class="material-symbols-outlined text-[18px] text-primary">barcode_scanner</span>
-                        Scan kartu siswa
+                        Scan kartu
                     </label>
                     <input id="kartu_barcode" type="text" name="kartu_barcode" required autofocus autocomplete="off"
                         enterkeyhint="next" placeholder="SW-1001"
                         class="mt-2 h-12 w-full rounded-lg border border-outline-variant bg-white px-3 font-data-mono text-base text-on-surface outline-none placeholder:text-on-surface-variant/50 focus:border-primary focus:ring-1 focus:ring-primary">
                     <div class="mt-2 flex gap-1.5">
                         <button type="button" id="cariKartuBtn" class="inline-flex h-11 items-center gap-1 rounded-lg border border-outline-variant px-3 text-[13px] font-semibold text-on-surface hover:border-primary hover:text-primary">
-                            <span class="material-symbols-outlined text-[18px]">person_search</span> Cari siswa
+                            <span class="material-symbols-outlined text-[18px]">person_search</span> Cari Pengguna
                         </button>
                         <span id="kartuTerpilih" class="hidden min-w-0 flex-1 truncate self-center text-[13px] font-semibold text-primary"></span>
                     </div>

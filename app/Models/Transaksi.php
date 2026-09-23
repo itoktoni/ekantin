@@ -40,7 +40,7 @@ class Transaksi extends BaseModel
     public static $filterColumns = [
         'transaksi_jenis' => 'Jenis',
         'transaksi_status' => 'Status',
-        'nama_siswa' => 'Nama Siswa',
+        'nama_pengguna' => 'Nama Pengguna',
         'barcode' => 'Barcode',
         'created_at' => 'Tanggal',
     ];

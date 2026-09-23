@@ -19,11 +19,11 @@ class EkantinUserSeeder extends Seeder
             ['Budi Vendor', 'budi.vendor@sekolah.id', 'vendor'],
             ['Siti Ortu', 'siti@sekolah.id', 'orang_tua'],
             ['Dewi Ortu', 'dewi@sekolah.id', 'orang_tua'],
-            ['Ayu Siswa', 'ayu@sekolah.id', 'siswa'],
-            ['Bima Siswa', 'bima@sekolah.id', 'siswa'],
-            ['Citra Siswa', 'citra@sekolah.id', 'siswa'],
-            ['Dimas Siswa', 'dimas@sekolah.id', 'siswa'],
-            ['Eka Siswa', 'eka@sekolah.id', 'siswa'],
+            ['Ayu Pengguna', 'ayu@sekolah.id', 'pengguna'],
+            ['Bima Pengguna', 'bima@sekolah.id', 'pengguna'],
+            ['Citra Pengguna', 'citra@sekolah.id', 'pengguna'],
+            ['Dimas Pengguna', 'dimas@sekolah.id', 'pengguna'],
+            ['Eka Pengguna', 'eka@sekolah.id', 'pengguna'],
         ];
         foreach ($akun as [$name, $email, $role]) {
             User::updateOrCreate(

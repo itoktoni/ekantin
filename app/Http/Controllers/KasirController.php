@@ -19,7 +19,7 @@ class KasirController extends Controller
         $this->model = $model::getModel();
     }
 
-    // POS sentral: semua produk dari semua gerai buka dalam 1 keranjang.
+    // POS: admin/kasir = semua gerai; vendor = HANYA produk gerai miliknya sendiri.
     public function getPos(GeneralRequest $request)
     {
         $cari = $request->input('cari');
@@ -27,6 +27,7 @@ class KasirController extends Controller
             ->join('gerai', 'gerai.gerai_id', '=', 'produk.produk_id_gerai')
             ->where('produk.produk_status', 'tersedia')
             ->where('gerai.gerai_status', 'buka')
+            ->when(auth()->user()?->role === 'vendor', fn ($q) => $q->where('gerai.gerai_id_vendor', auth()->id()))
             ->when($cari, fn ($q) => $q->where('produk.produk_nama', 'like', "%{$cari}%"))
             ->orderBy('gerai.gerai_nama')
             ->orderBy('produk.produk_kategori')
@@ -64,6 +65,14 @@ class KasirController extends Controller
 
             return redirect()->route('kasir.pos');
         }
+        // ponytail: vendor hanya boleh jual produk gerai miliknya — cegah tembak produk gerai lain via ID.
+        if (auth()->user()?->role === 'vendor') {
+            $milik = Gerai::where('gerai_id_vendor', auth()->id())->pluck('gerai_id')->all();
+            $asing = Produk::whereIn('produk_id', collect($items)->pluck('produk_id'))->whereNotIn('produk_id_gerai', $milik)->exists();
+            if ($asing) {
+                abort(403, 'Ada produk bukan milik gerai Anda');
+            }
+        }
         $response = ProcessPurchaseAction::run([
             'metode' => $data['metode'],
             'kartu_barcode' => $data['kartu_barcode'] ?? null,
@@ -78,8 +87,8 @@ class KasirController extends Controller
         return $this->response($response, redirect()->route('kasir.pos'));
     }
 
-    // Struk: item dikelompokkan per gerai untuk diambil siswa.
-    // Cek IDOR: vendor/orang_tua/siswa hanya boleh lihat struk transaksinya sendiri.
+    // Struk: item dikelompokkan per gerai untuk diambil pengguna.
+    // Cek IDOR: vendor/orang_tua/pengguna hanya boleh lihat struk transaksinya sendiri.
     public function getStruk(GeneralRequest $request, $id)
     {
         $trx = Transaksi::with(['hasKartu.hasUser', 'hasItems.hasGerai'])->findOrFail($id);
@@ -91,7 +100,7 @@ class KasirController extends Controller
             if (! $punya) {
                 abort(403, 'Bukan transaksi gerai Anda');
             }
-        } elseif ($role === 'siswa') {
+        } elseif ($role === 'pengguna') {
             $kartuId = \App\Models\Kartu::where('kartu_id_user', auth()->id())->value('kartu_id');
             if ((int) $trx->transaksi_id_kartu !== (int) $kartuId) {
                 abort(403, 'Bukan transaksi Anda');

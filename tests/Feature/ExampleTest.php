@@ -1,7 +1,6 @@
 <?php
 
-it('returns a successful response', function () {
-    $response = $this->get('/');
-
-    $response->assertStatus(200);
+it('redirects guests to the login page', function () {
+    // Halaman "/" (CMS PublicController) berada di belakang auth — guest diarahkan ke /login.
+    $this->get('/')->assertRedirect('/login');
 });

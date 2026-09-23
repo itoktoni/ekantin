@@ -15,7 +15,7 @@
     <table>
         <tr>
             <th>Tanggal</th>
-            <th>Siswa</th>
+            <th>Pengguna</th>
             <th>Gerai</th>
             <th>Jenis</th>
             <th>Total</th>

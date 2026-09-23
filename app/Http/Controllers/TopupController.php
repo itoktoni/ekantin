@@ -36,7 +36,7 @@ class TopupController extends Controller
         $kartuQ = Kartu::query()->with('hasUser');
         $role = auth()->user()?->role;
         if ($role === 'orang_tua') $kartuQ->where('kartu_id_orangtua', auth()->id());
-        elseif ($role === 'siswa') $kartuQ->where('kartu_id_user', auth()->id());
+        elseif ($role === 'pengguna') $kartuQ->where('kartu_id_user', auth()->id());
         $kartuOptions = $kartuQ->orderBy('kartu_barcode')->get()->mapWithKeys(fn($k)=>[$k->kartu_barcode => ($k->hasUser?->name ?? $k->kartu_barcode).' — '.$k->kartu_barcode.' ('.$k->kartu_kelas.')'])->toArray();
         return $this->views('pages.topup.tunai', [
             'model' => $this->model,
@@ -70,12 +70,12 @@ class TopupController extends Controller
         $kartu = $this->cariKartu($barcode);
         $trx = $request->filled('trx') ? Transaksi::with('hasKartu')->find($request->input('trx')) : null;
 
-        // options untuk pilih siswa (scan atau select)
+        // options untuk pilih pengguna (scan atau select)
         $kartuQ = Kartu::query()->with('hasUser');
         $role = auth()->user()?->role;
         if ($role === 'orang_tua') {
             $kartuQ->where('kartu_id_orangtua', auth()->id());
-        } elseif ($role === 'siswa') {
+        } elseif ($role === 'pengguna') {
             $kartuQ->where('kartu_id_user', auth()->id());
         }
         $kartuOptions = $kartuQ->orderBy('kartu_barcode')->get()->mapWithKeys(fn($k)=>[$k->kartu_barcode => ($k->hasUser?->name ?? $k->kartu_barcode).' — '.$k->kartu_barcode.' ('.$k->kartu_kelas.')'])->toArray();
@@ -87,7 +87,7 @@ class TopupController extends Controller
         } elseif ($role === 'orang_tua') {
             $ids = Kartu::where('kartu_id_orangtua', auth()->id())->pluck('kartu_id');
             $historyQ->whereIn('transaksi_id_kartu', $ids);
-        } elseif ($role === 'siswa') {
+        } elseif ($role === 'pengguna') {
             $ids = Kartu::where('kartu_id_user', auth()->id())->pluck('kartu_id');
             $historyQ->whereIn('transaksi_id_kartu', $ids);
         }

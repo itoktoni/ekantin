@@ -13,12 +13,15 @@ class Penarikan extends BaseModel
     protected $fillable = [
         'penarikan_id_gerai',
         'penarikan_nominal',
+        'penarikan_tanggal',
         'penarikan_status',
         'penarikan_bukti',
         'penarikan_id_admin',
+        'penarikan_id_kasir',
     ];
 
     public static $filterColumns = [
+        'penarikan_tanggal' => 'Tanggal',
         'penarikan_status' => 'Status',
     ];
 
@@ -32,6 +35,7 @@ class Penarikan extends BaseModel
     {
         return [
             'penarikan_nominal' => 'integer',
+            'penarikan_tanggal' => 'date',
         ];
     }
 
@@ -45,9 +49,11 @@ class Penarikan extends BaseModel
         return [
             'penarikan_id_gerai' => 'required|exists:gerai,gerai_id',
             'penarikan_nominal' => 'required|integer|min:1',
-            'penarikan_status' => 'required|in:diajukan,diselesaikan,ditolak',
+            'penarikan_tanggal' => 'nullable|date',
+            'penarikan_status' => 'required|in:diajukan,diselesaikan,ditolak,dibatalkan',
             'penarikan_bukti' => 'nullable|string|max:255',
             'penarikan_id_admin' => 'nullable|exists:users,id',
+            'penarikan_id_kasir' => 'nullable|exists:users,id',
         ];
     }
 
@@ -59,5 +65,10 @@ class Penarikan extends BaseModel
     public function hasAdmin(): BelongsTo
     {
         return $this->belongsTo(User::class, 'penarikan_id_admin', 'id');
+    }
+
+    public function hasKasir(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'penarikan_id_kasir', 'id');
     }
 }
