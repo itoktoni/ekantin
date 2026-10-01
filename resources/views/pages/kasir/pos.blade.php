@@ -433,13 +433,26 @@
             metodeInput.value = document.querySelector('input[name="metode_bayar"]:checked')?.value || 'tunai';
         });
 
-        // ── NFC: tempel → cari kode unik + user → langsung bayar (tanpa PIN) ──
+        // ── NFC read-only UID: tempel → cari kode unik + user → langsung bayar (tanpa PIN) ──
         const nfcStatus = document.getElementById('nfcStatus');
         const rupiah = (n) => 'Rp' + Number(n || 0).toLocaleString('id-ID');
         let nfcBusy = false;
         let lastUid = '';
         let lastUidAt = 0;
         let firstKeyAt = 0;
+
+        // Normalisasi UID: kupas prefix/suffix wedge umum + separator, huruf besar.
+        // Kode label lama (SW-1001) mengandung non-hex → dibiarkan apa adanya.
+        function nfcClean(s) { return (s || '').replace(/^;+|\?+$/g, '').trim(); }
+        function nfcUid(s) {
+            const h = (s || '').replace(/[^0-9a-fA-F]/g, '');
+            return h.length >= 8 ? h.toUpperCase() : null;
+        }
+        function nfcSame(a, b) {
+            const ua = nfcUid(a), ub = nfcUid(b);
+            if (ua && ub) return ua === ub;
+            return (a || '').toLowerCase() === (b || '').toLowerCase();
+        }
 
         function beep(ok = true) {
             try {
@@ -481,18 +494,31 @@
         }
 
         // Watchdog fokus: kursor blink selalu kembali ke input scan (kecuali kasir lagi ketik di field lain).
-        document.addEventListener('focusout', () => {
-            if (mode !== 'kartu') return;
-            setTimeout(() => {
-                const aktif = document.activeElement;
-                if (!aktif || aktif === document.body || aktif === kartuInput) {
-                    if (!document.querySelector('[role="dialog"]')) kartuInput.focus({ preventScroll: true });
-                }
-            }, 300);
-        });
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && mode === 'kartu') kartuInput.focus({ preventScroll: true });
-        });
+        // Listener document dilepas-pasang ulang supaya tidak menumpuk tiap wire:navigate.
+        if (window.__posNfcDoc) {
+            document.removeEventListener('focusout', window.__posNfcDoc.focusout);
+            document.removeEventListener('visibilitychange', window.__posNfcDoc.visible);
+        }
+        window.__posNfcDoc = {
+            focusout: () => {
+                const el = document.getElementById('kartu_barcode');
+                if (!el || el.closest('div.rounded-xl').classList.contains('hidden')) return;
+                setTimeout(() => {
+                    const now = document.getElementById('kartu_barcode');
+                    if (!now) return;
+                    const aktif = document.activeElement;
+                    if (!aktif || aktif === document.body || aktif === now) {
+                        if (!document.querySelector('[role="dialog"]')) now.focus({ preventScroll: true });
+                    }
+                }, 300);
+            },
+            visible: () => {
+                const el = document.getElementById('kartu_barcode');
+                if (!document.hidden && el && !el.closest('div.rounded-xl').classList.contains('hidden')) el.focus({ preventScroll: true });
+            },
+        };
+        document.addEventListener('focusout', window.__posNfcDoc.focusout);
+        document.addEventListener('visibilitychange', window.__posNfcDoc.visible);
         // Setelah tambah/kurang produk, kembalikan fokus ke scan supaya tap berikutnya langsung masuk.
         form.addEventListener('click', (e) => {
             if (!e.target.closest('[data-add],[data-minus],[data-plus]')) return;
@@ -512,11 +538,11 @@
 
         async function handleNfcTap() {
             if (mode !== 'kartu' || nfcBusy) return;
-            const code = kartuInput.value.trim();
+            const code = nfcClean(kartuInput.value);
             if (code.length < 2) { kartuInput.focus(); return; }
-            // Dedup: tempelan ganda / kartu masih nempel — telan UID sama dalam 2 detik.
+            // Dedup: tempelan ganda / kartu masih nempel — telan UID sama dalam 2 detik (banding ternormalisasi).
             const now = Date.now();
-            if (code === lastUid && now - lastUidAt < 2000) { setStatus('err', 'Kartu sudah diproses, angkat dulu kartunya.'); beep(false); return; }
+            if (nfcSame(code, lastUid) && now - lastUidAt < 2000) { setStatus('err', 'Kartu sudah diproses, angkat dulu kartunya.'); beep(false); return; }
             lastUid = code; lastUidAt = now;
             nfcBusy = true;
 
@@ -533,8 +559,9 @@
                 beep(false); nfcBusy = false; kartuInput.focus(); kartuInput.select();
                 return;
             }
-            // Cari kode unik persis dulu, fallback ke hasil pertama.
-            const pas = rows.find((r) => (r.barcode || '').toLowerCase() === code.toLowerCase()) || rows[0];
+            // UID read-only: WAJIB cocok persis (ternormalisasi) — tanpa fallback,
+            // supaya tidak pernah membayar pakai kartu orang lain.
+            const pas = rows.find((r) => nfcSame(r.barcode, code));
             if (!pas) {
                 setStatus('err', 'Kartu ' + code + ' tidak terdaftar.');
                 beep(false); nfcBusy = false; kartuInput.focus(); kartuInput.select();

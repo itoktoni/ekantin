@@ -29,8 +29,6 @@
 
     <script>
     (function () {
-        if (window.__kartuNfcInit) return;
-        window.__kartuNfcInit = true;
         const input = document.querySelector('input[name="kartu_barcode"]');
         if (!input) return;
         input.classList.add('nfc-input');
@@ -65,6 +63,17 @@
             input.classList.toggle('nfc-err', kind === 'err');
         }
 
+        function nfcClean(s) { return (s || '').replace(/^;+|\?+$/g, '').trim(); }
+        function nfcUid(s) {
+            const h = (s || '').replace(/[^0-9a-fA-F]/g, '');
+            return h.length >= 8 ? h.toUpperCase() : null;
+        }
+        function nfcSame(a, b) {
+            const ua = nfcUid(a), ub = nfcUid(b);
+            if (ua && ub) return ua === ub;
+            return (a || '').toLowerCase() === (b || '').toLowerCase();
+        }
+
         let busy = false, lastUid = '', lastAt = 0, firstKeyAt = 0;
         const currentId = @json(isset($model) && $model->exists ? (int) $model->kartu_id : null);
         const originalBarcode = @json(isset($model) && $model->exists ? (string) $model->kartu_barcode : '');
@@ -77,15 +86,19 @@
             if (e.key.length === 1 && !firstKeyAt) firstKeyAt = performance.now();
         });
         input.addEventListener('input', () => { if (!input.value) firstKeyAt = 0; });
-        document.addEventListener('focusout', () => {
+        // Lepas-pasang ulang supaya tidak menumpuk tiap wire:navigate.
+        if (window.__kartuNfcDoc) document.removeEventListener('focusout', window.__kartuNfcDoc);
+        window.__kartuNfcDoc = () => {
             setTimeout(() => {
-                if (!document.activeElement || document.activeElement === document.body) input.focus({ preventScroll: true });
+                const el = document.querySelector('input[name="kartu_barcode"]');
+                if (el && (!document.activeElement || document.activeElement === document.body)) el.focus({ preventScroll: true });
             }, 400);
-        });
+        };
+        document.addEventListener('focusout', window.__kartuNfcDoc);
 
         async function handleTap() {
             if (busy) return;
-            let code = input.value.trim();
+            let code = nfcClean(input.value);
             // Kupas sisa barcode lama kalau wedge menempel di depan/belakang (mis. "SW-100104A3…" → "04A3…").
             if (originalBarcode && code.length > originalBarcode.length) {
                 const low = code.toLowerCase(), old = originalBarcode.toLowerCase();
@@ -94,7 +107,7 @@
             }
             if (code.length < 2) { input.focus(); return; }
             const now = Date.now();
-            if (code === lastUid && now - lastAt < 2000) { setInfo('err', 'Kartu sudah diproses, angkat dulu kartunya.'); beep(false); return; }
+            if (nfcSame(code, lastUid) && now - lastAt < 2000) { setInfo('err', 'Kartu sudah diproses, angkat dulu kartunya.'); beep(false); return; }
             lastUid = code; lastAt = now;
             busy = true;
             firstKeyAt = 0;
@@ -108,7 +121,7 @@
                 beep(false); busy = false; input.focus(); input.select();
                 return;
             }
-            const pas = rows.find((r) => (r.barcode || '').toLowerCase() === code.toLowerCase());
+            const pas = rows.find((r) => nfcSame(r.barcode, code));
             if (pas) {
                 input.value = pas.barcode;
                 tapKartuId = pas.kartu_id ?? null;
@@ -127,10 +140,9 @@
                 const sel = document.querySelector('select[name="kartu_id_user"]');
                 if (sel) sel.focus({ preventScroll: true });
             } else {
-                // UID baru belum terdaftar → clear barcode lama, isi ID NFC baru.
+                // UID baru belum terdaftar → clear barcode lama, isi ID NFC baru (kanonis Uppercase tanpa separator).
                 tapKartuId = null;
-                input.value = '';
-                input.value = code;
+                input.value = nfcUid(code) || code;
                 if (currentId) {
                     // Mode GANTI (Edit): langsung simpan otomatis, tanpa klik Save.
                     setInfo('ok', 'Mengganti ke ' + code + ' … menyimpan otomatis.');
@@ -148,10 +160,12 @@
             busy = false;
         }
 
-        // Cegah save jika barcode milik record lain (mode edit).
+        // Normalisasi + cegah save jika barcode milik record lain (mode edit).
         const kartuForm = input.closest('form');
         if (kartuForm) {
             kartuForm.addEventListener('submit', (e) => {
+                const uid = nfcUid(nfcClean(input.value));
+                if (uid) input.value = uid; // simpan selalu format kanonis
                 if (currentId && tapKartuId && Number(tapKartuId) !== Number(currentId)) {
                     e.preventDefault();
                     setInfo('err', 'BLOKIR: barcode ini milik siswa lain. Tempel kartu kosong baru.');

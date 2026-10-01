@@ -63,11 +63,20 @@
 
     <script>
     (function () {
-        if (window.__topupTunaiNfcInit) return;
-        window.__topupTunaiNfcInit = true;
         const input = document.getElementById('nfcTopup');
         const status = document.getElementById('nfcTopupStatus');
         if (!input || !status) return;
+
+        function nfcClean(s) { return (s || '').replace(/^;+|\?+$/g, '').trim(); }
+        function nfcUid(s) {
+            const h = (s || '').replace(/[^0-9a-fA-F]/g, '');
+            return h.length >= 8 ? h.toUpperCase() : null;
+        }
+        function nfcSame(a, b) {
+            const ua = nfcUid(a), ub = nfcUid(b);
+            if (ua && ub) return ua === ub;
+            return (a || '').toLowerCase() === (b || '').toLowerCase();
+        }
 
         function beep(ok = true) {
             try {
@@ -88,44 +97,54 @@
 
         let busy = false, lastUid = '', lastAt = 0;
         // Pengaman: tap nyasar saat fokus di nominal → alihkan ke alur NFC, jangan jadi nominal.
+        // Listener document dilepas-pasang ulang supaya tidak menumpuk tiap wire:navigate.
+        if (window.__topupTunaiNfcDoc) {
+            document.removeEventListener('keydown', window.__topupTunaiNfcDoc.key, true);
+            document.removeEventListener('focusout', window.__topupTunaiNfcDoc.focus);
+        }
         let burstAt = 0;
-        document.addEventListener('keydown', (e) => {
-            if (e.key.length === 1 && (!document.activeElement || document.activeElement === document.body || document.activeElement === input)) burstAt = burstAt || performance.now();
-            if (e.key === 'Enter' && document.activeElement && document.activeElement.name === 'nominal') {
-                const v = (document.activeElement.value || '').trim();
-                if (v.length >= 4 && burstAt && (performance.now() - burstAt) < (v.length * 60 + 200)) {
-                    e.preventDefault(); e.stopPropagation();
-                    document.activeElement.value = '';
-                    burstAt = 0;
-                    input.value = v;
-                    handleTap();
+        window.__topupTunaiNfcDoc = {
+            key: (e) => {
+                const el = document.getElementById('nfcTopup');
+                if (e.key.length === 1 && (!document.activeElement || document.activeElement === document.body || document.activeElement === el)) burstAt = burstAt || performance.now();
+                if (e.key === 'Enter' && document.activeElement && document.activeElement.name === 'nominal') {
+                    const v = (document.activeElement.value || '').trim();
+                    if (v.length >= 4 && burstAt && (performance.now() - burstAt) < (v.length * 60 + 200)) {
+                        e.preventDefault(); e.stopPropagation();
+                        document.activeElement.value = '';
+                        burstAt = 0;
+                        if (el) { el.value = v; el.focus(); handleTap(); }
+                    }
                 }
-            }
-            if (e.key === 'Enter') burstAt = 0;
-        }, true);
+                if (e.key === 'Enter') burstAt = 0;
+            },
+            focus: () => {
+                setTimeout(() => {
+                    const el = document.getElementById('nfcTopup');
+                    if (el && (!document.activeElement || document.activeElement === document.body)) el.focus({ preventScroll: true });
+                }, 400);
+            },
+        };
+        document.addEventListener('keydown', window.__topupTunaiNfcDoc.key, true);
+        document.addEventListener('focusout', window.__topupTunaiNfcDoc.focus);
 
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); handleTap(); }
         });
-        document.addEventListener('focusout', () => {
-            setTimeout(() => {
-                if (!document.activeElement || document.activeElement === document.body) input.focus({ preventScroll: true });
-            }, 400);
-        });
 
         async function handleTap() {
             if (busy) return;
-            const code = input.value.trim();
+            const code = nfcClean(input.value);
             if (code.length < 2) { input.focus(); return; }
             const now = Date.now();
-            if (code === lastUid && now - lastAt < 2000) { setStatus('err', 'Kartu sudah diproses, angkat dulu kartunya.'); beep(false); return; }
+            if (nfcSame(code, lastUid) && now - lastAt < 2000) { setStatus('err', 'Kartu sudah diproses, angkat dulu kartunya.'); beep(false); return; }
             lastUid = code; lastAt = now;
             busy = true;
             setStatus('info', 'Mencari ' + code + ' …');
             try {
                 const res = await fetch('{{ route('kartu.getSearch') }}?q=' + encodeURIComponent(code), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
                 const rows = await res.json();
-                const pas = rows.find((r) => (r.barcode || '').toLowerCase() === code.toLowerCase()) || rows[0];
+                const pas = rows.find((r) => nfcSame(r.barcode, code));
                 if (!pas) { setStatus('err', 'Kartu ' + code + ' tidak terdaftar.'); beep(false); busy = false; input.focus(); input.select(); return; }
                 setStatus('ok', pas.nama + ' terbaca — membuka…');
                 beep(true);

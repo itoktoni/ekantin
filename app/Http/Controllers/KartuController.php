@@ -67,12 +67,19 @@ class KartuController extends Controller
         if (mb_strlen($q) < 2) {
             return response()->json([]);
         }
+        // UID NFC read-only bisa datang beda format (04:A3:B2:1C vs 04a3b21c) —
+        // samakan versi kupas-separator supaya tap tetap ketemu walau format beda.
+        $norm = strtoupper((string) preg_replace('/[^0-9a-fA-F]/', '', $q));
+        $isUid = strlen($norm) >= 8 && ctype_xdigit($norm);
         $rows = Kartu::query()->with('hasUser:id,name')
             ->where('kartu_status', 'aktif')
-            ->where(function ($w) use ($q) {
+            ->where(function ($w) use ($q, $norm, $isUid) {
                 $w->where('kartu_barcode', 'like', "%{$q}%")
                     ->orWhere('kartu_nis', 'like', "%{$q}%")
                     ->orWhereHas('hasUser', fn ($u) => $u->where('name', 'like', "%{$q}%"));
+                if ($isUid) {
+                    $w->orWhereRaw("UPPER(REPLACE(REPLACE(REPLACE(kartu_barcode, ':', ''), ' ', ''), '-', '')) = ?", [$norm]);
+                }
             })
             ->limit(10)->get()
             ->map(fn ($k) => [
