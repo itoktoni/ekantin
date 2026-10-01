@@ -41,10 +41,21 @@
                     <label for="kartu_barcode" class="flex items-center gap-1.5 text-[13px] font-bold text-on-surface">
                         <span class="material-symbols-outlined text-[18px] text-primary">barcode_scanner</span>
                         Scan kartu
+                        <span id="nfcDot" class="ml-1 inline-block h-2.5 w-2.5 rounded-full bg-success animate-pulse" title="Siap scan"></span>
                     </label>
                     <input id="kartu_barcode" type="text" name="kartu_barcode" required autofocus autocomplete="off"
-                        enterkeyhint="next" placeholder="SW-1001"
-                        class="mt-2 h-12 w-full rounded-lg border border-outline-variant bg-white px-3 font-data-mono text-base text-on-surface outline-none placeholder:text-on-surface-variant/50 focus:border-primary focus:ring-1 focus:ring-primary">
+                        enterkeyhint="go" placeholder="Tempelkan kartu NFC…" spellcheck="false"
+                        class="nfc-input mt-2 h-12 w-full rounded-lg border border-outline-variant bg-white px-3 font-data-mono text-base text-on-surface outline-none placeholder:text-on-surface-variant/50 focus:border-primary focus:ring-1 focus:ring-primary">
+                    <p id="nfcStatus" aria-live="polite" class="mt-1.5 hidden items-center gap-1 text-xs font-semibold"></p>
+                    <style>
+                        /* Cursor blink + fokus siap-scan */
+                        .nfc-input { caret-color: var(--color-primary, #1a28a2); }
+                        .nfc-input:focus { caret-color: var(--color-primary, #1a28a2); border-color: var(--color-primary, #1a28a2); }
+                        .nfc-input.nfc-ok { border-color: var(--color-success, #15803d); box-shadow: 0 0 0 1px var(--color-success, #15803d); }
+                        .nfc-input.nfc-err { border-color: var(--color-error, #b3261e); box-shadow: 0 0 0 1px var(--color-error, #b3261e); }
+                        #nfcDot { animation: nfcBlink 1.2s ease-in-out infinite; }
+                        @keyframes nfcBlink { 0%,100% { opacity: 1; transform: scale(1);} 50% { opacity: .35; transform: scale(.8);} }
+                    </style>
                     <div class="mt-2 flex gap-1.5">
                         <button type="button" id="cariKartuBtn" class="inline-flex h-11 items-center gap-1 rounded-lg border border-outline-variant px-3 text-[13px] font-semibold text-on-surface hover:border-primary hover:text-primary">
                             <span class="material-symbols-outlined text-[18px]">person_search</span> Cari Pengguna
@@ -422,15 +433,150 @@
             metodeInput.value = document.querySelector('input[name="metode_bayar"]:checked')?.value || 'tunai';
         });
 
+        // ── NFC: tempel → cari kode unik + user → langsung bayar (tanpa PIN) ──
+        const nfcStatus = document.getElementById('nfcStatus');
+        const rupiah = (n) => 'Rp' + Number(n || 0).toLocaleString('id-ID');
+        let nfcBusy = false;
+        let lastUid = '';
+        let lastUidAt = 0;
+        let firstKeyAt = 0;
+
+        function beep(ok = true) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+                o.connect(g); g.connect(ctx.destination);
+                o.frequency.value = ok ? 880 : 220;
+                o.type = 'sine';
+                g.gain.setValueAtTime(0.15, ctx.currentTime);
+                o.start();
+                o.stop(ctx.currentTime + (ok ? 0.12 : 0.3));
+            } catch (e) { /* audio opsional */ }
+        }
+
+        function setStatus(kind, msg) {
+            if (!nfcStatus) return;
+            nfcStatus.classList.remove('hidden');
+            nfcStatus.classList.add('flex');
+            const color = kind === 'ok' ? 'text-success' : kind === 'err' ? 'text-error' : 'text-on-surface-variant';
+            nfcStatus.className = 'mt-1.5 flex items-center gap-1 text-xs font-semibold ' + color;
+            nfcStatus.innerHTML = '<span class="material-symbols-outlined text-[14px]">' +
+                (kind === 'ok' ? 'check_circle' : kind === 'err' ? 'error' : 'progress_activity') +
+                '</span><span>' + msg + '</span>';
+            kartuInput.classList.toggle('nfc-ok', kind === 'ok');
+            kartuInput.classList.toggle('nfc-err', kind === 'err');
+        }
+
+        function nfcCartTotal() {
+            let total = 0, count = 0;
+            cards.forEach((card) => {
+                const q = Math.max(0, parseInt(card.querySelector('input[data-qty]').value || '0', 10) || 0);
+                count += q;
+                total += q * parseInt(card.dataset.harga || '0', 10);
+            });
+            let fee = 0;
+            Object.values(feePersen).forEach((p) => { fee += Math.round(total * parseFloat(p) / 100); });
+            return { total, fee, count, potong: total + fee };
+        }
+
+        // Watchdog fokus: kursor blink selalu kembali ke input scan (kecuali kasir lagi ketik di field lain).
+        document.addEventListener('focusout', () => {
+            if (mode !== 'kartu') return;
+            setTimeout(() => {
+                const aktif = document.activeElement;
+                if (!aktif || aktif === document.body || aktif === kartuInput) {
+                    if (!document.querySelector('[role="dialog"]')) kartuInput.focus({ preventScroll: true });
+                }
+            }, 300);
+        });
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && mode === 'kartu') kartuInput.focus({ preventScroll: true });
+        });
+        // Setelah tambah/kurang produk, kembalikan fokus ke scan supaya tap berikutnya langsung masuk.
+        form.addEventListener('click', (e) => {
+            if (!e.target.closest('[data-add],[data-minus],[data-plus]')) return;
+            setTimeout(() => { if (mode === 'kartu') kartuInput.focus({ preventScroll: true }); }, 300);
+        });
+
+        // Deteksi burst wedge: catat waktu ketik pertama untuk bedakan tap NFC vs ketik manual.
+        kartuInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleNfcTap();
+                return;
+            }
+            if (e.key.length === 1 && !firstKeyAt) firstKeyAt = performance.now();
+        });
+        kartuInput.addEventListener('input', () => { if (!kartuInput.value) firstKeyAt = 0; });
+
+        async function handleNfcTap() {
+            if (mode !== 'kartu' || nfcBusy) return;
+            const code = kartuInput.value.trim();
+            if (code.length < 2) { kartuInput.focus(); return; }
+            // Dedup: tempelan ganda / kartu masih nempel — telan UID sama dalam 2 detik.
+            const now = Date.now();
+            if (code === lastUid && now - lastUidAt < 2000) { setStatus('err', 'Kartu sudah diproses, angkat dulu kartunya.'); beep(false); return; }
+            lastUid = code; lastUidAt = now;
+            nfcBusy = true;
+
+            const isBurst = firstKeyAt ? (performance.now() - firstKeyAt) < (code.length * 60 + 150) : true;
+            firstKeyAt = 0;
+            setStatus('info', (isBurst ? 'Kartu terbaca: ' : '') + code + ' — mencari…');
+
+            let rows = [];
+            try {
+                const res = await fetch('{{ route('kartu.getSearch') }}?q=' + encodeURIComponent(code), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                rows = await res.json();
+            } catch (e) {
+                setStatus('err', 'Gagal cari kartu, periksa koneksi lalu tempel ulang.');
+                beep(false); nfcBusy = false; kartuInput.focus(); kartuInput.select();
+                return;
+            }
+            // Cari kode unik persis dulu, fallback ke hasil pertama.
+            const pas = rows.find((r) => (r.barcode || '').toLowerCase() === code.toLowerCase()) || rows[0];
+            if (!pas) {
+                setStatus('err', 'Kartu ' + code + ' tidak terdaftar.');
+                beep(false); nfcBusy = false; kartuInput.focus(); kartuInput.select();
+                return;
+            }
+            // Normalisasi ke kode unik resmi + tampilkan user-nya.
+            kartuInput.value = pas.barcode;
+            kartuTerpilih.textContent = pas.nama + ' • ' + rupiah(pas.saldo);
+            kartuTerpilih.classList.remove('hidden');
+            hasilKartu.classList.add('hidden');
+
+            const { total, fee, count, potong } = nfcCartTotal();
+            if (count === 0) {
+                setStatus('err', pas.nama + ' terbaca (' + rupiah(pas.saldo) + '). Pilih produk dulu baru tempel ulang untuk bayar.');
+                beep(false); nfcBusy = false;
+                document.getElementById('cariProduk').focus();
+                return;
+            }
+            if (pas.saldo < potong) {
+                const kurang = potong - pas.saldo;
+                setStatus('err', 'Saldo kurang ' + rupiah(kurang) + '. Saldo ' + rupiah(pas.saldo) + ', butuh ' + rupiah(potong) + ' (belanja ' + rupiah(total) + ' + fee ' + rupiah(fee) + ').');
+                beep(false); nfcBusy = false; kartuInput.focus(); kartuInput.select();
+                return;
+            }
+            setStatus('ok', 'Berhasil: ' + pas.nama + ' • Potong ' + rupiah(potong) + ' — memproses…');
+            beep(true);
+            bayarBtn.disabled = true;
+            setTimeout(() => form.submit(), 350);
+        }
+
         document.getElementById('cariKartuBtn').addEventListener('click', async () => {
             const q = kartuInput.value.trim();
             if (q.length < 2) { kartuInput.focus(); return; }
+            // Tombol manual tetap tampilkan daftar pilihan (tidak langsung bayar).
             const res = await fetch('{{ route('kartu.getSearch') }}?q=' + encodeURIComponent(q), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             const rows = await res.json();
             hasilKartu.innerHTML = '';
             hasilKartu.classList.remove('hidden');
             if (!rows.length) {
                 hasilKartu.innerHTML = '<p class="p-2 text-[13px] text-on-surface-variant">Tidak ketemu.</p>';
+                setStatus('err', 'Kartu ' + q + ' tidak terdaftar.');
+                beep(false);
                 return;
             }
             rows.forEach((r) => {
@@ -443,6 +589,8 @@
                     kartuTerpilih.textContent = r.nama + ' • Rp' + r.saldo.toLocaleString('id-ID');
                     kartuTerpilih.classList.remove('hidden');
                     hasilKartu.classList.add('hidden');
+                    setStatus('ok', r.nama + ' dipilih (' + rupiah(r.saldo) + '). Tempel ulang / tekan Enter untuk bayar.');
+                    kartuInput.focus();
                 });
                 hasilKartu.appendChild(b);
             });
@@ -469,6 +617,9 @@
         });
 
         refreshCart();
+        // Fokus awal + pesan siap.
+        kartuInput.focus({ preventScroll: true });
+        setStatus('info', 'Siap scan — tempelkan kartu NFC.');
     })();
     </script>
 </x-layouts::app>

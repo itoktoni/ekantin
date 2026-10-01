@@ -14,6 +14,16 @@
                 <div id="readerTunai" class="hidden mt-2 rounded-xl overflow-hidden border border-outline-variant" style="max-width:320px"></div>
                 <p class="text-xs text-on-surface-variant mt-1">Pilih dari dropdown, ketik barcode, atau klik Scan untuk pakai kamera HP.</p>
             </div>
+            <div class="col-span-12">
+                <label for="nfcTopup" class="font-body-sm text-body-sm font-bold text-on-surface-variant flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[16px] text-primary">nfc</span>
+                    Tempel kartu NFC
+                    <span id="nfcTopupDot" class="inline-block h-2.5 w-2.5 rounded-full bg-success animate-pulse" title="Siap scan"></span>
+                </label>
+                <input id="nfcTopup" type="text" autocomplete="off" spellcheck="false" placeholder="Tempelkan kartu…"
+                    class="mt-1 h-12 w-full rounded-lg border border-outline-variant bg-white px-4 font-data-mono outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                <p id="nfcTopupStatus" aria-live="polite" class="mt-1 text-xs font-semibold text-on-surface-variant">Siap scan — tempelkan kartu NFC.</p>
+            </div>
         </x-card>
     </x-form>
     @push('scripts')
@@ -50,4 +60,85 @@
         <x-action :model="$model" :action="['save']" />
     </x-form>
     @endif
+
+    <script>
+    (function () {
+        if (window.__topupTunaiNfcInit) return;
+        window.__topupTunaiNfcInit = true;
+        const input = document.getElementById('nfcTopup');
+        const status = document.getElementById('nfcTopupStatus');
+        if (!input || !status) return;
+
+        function beep(ok = true) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+                o.connect(g); g.connect(ctx.destination);
+                o.frequency.value = ok ? 880 : 220;
+                o.type = 'sine';
+                g.gain.setValueAtTime(0.15, ctx.currentTime);
+                o.start(); o.stop(ctx.currentTime + (ok ? 0.12 : 0.3));
+            } catch (e) {}
+        }
+        function setStatus(kind, msg) {
+            status.className = 'mt-1 text-xs font-semibold ' + (kind === 'ok' ? 'text-success' : kind === 'err' ? 'text-error' : 'text-on-surface-variant');
+            status.textContent = msg;
+        }
+
+        let busy = false, lastUid = '', lastAt = 0;
+        // Pengaman: tap nyasar saat fokus di nominal → alihkan ke alur NFC, jangan jadi nominal.
+        let burstAt = 0;
+        document.addEventListener('keydown', (e) => {
+            if (e.key.length === 1 && (!document.activeElement || document.activeElement === document.body || document.activeElement === input)) burstAt = burstAt || performance.now();
+            if (e.key === 'Enter' && document.activeElement && document.activeElement.name === 'nominal') {
+                const v = (document.activeElement.value || '').trim();
+                if (v.length >= 4 && burstAt && (performance.now() - burstAt) < (v.length * 60 + 200)) {
+                    e.preventDefault(); e.stopPropagation();
+                    document.activeElement.value = '';
+                    burstAt = 0;
+                    input.value = v;
+                    handleTap();
+                }
+            }
+            if (e.key === 'Enter') burstAt = 0;
+        }, true);
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); handleTap(); }
+        });
+        document.addEventListener('focusout', () => {
+            setTimeout(() => {
+                if (!document.activeElement || document.activeElement === document.body) input.focus({ preventScroll: true });
+            }, 400);
+        });
+
+        async function handleTap() {
+            if (busy) return;
+            const code = input.value.trim();
+            if (code.length < 2) { input.focus(); return; }
+            const now = Date.now();
+            if (code === lastUid && now - lastAt < 2000) { setStatus('err', 'Kartu sudah diproses, angkat dulu kartunya.'); beep(false); return; }
+            lastUid = code; lastAt = now;
+            busy = true;
+            setStatus('info', 'Mencari ' + code + ' …');
+            try {
+                const res = await fetch('{{ route('kartu.getSearch') }}?q=' + encodeURIComponent(code), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const rows = await res.json();
+                const pas = rows.find((r) => (r.barcode || '').toLowerCase() === code.toLowerCase()) || rows[0];
+                if (!pas) { setStatus('err', 'Kartu ' + code + ' tidak terdaftar.'); beep(false); busy = false; input.focus(); input.select(); return; }
+                setStatus('ok', pas.nama + ' terbaca — membuka…');
+                beep(true);
+                const url = new URL('{{ route('topup.tunai') }}', window.location.origin);
+                url.searchParams.set('kartu_barcode', pas.barcode);
+                window.location.href = url.toString();
+            } catch (e) {
+                setStatus('err', 'Gagal cari kartu, tempel ulang.');
+                beep(false); busy = false; input.focus(); input.select();
+            }
+        }
+
+        input.focus({ preventScroll: true });
+    })();
+    </script>
 </x-layouts::app>
