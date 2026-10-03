@@ -7,7 +7,7 @@
         <x-card :label="moduleLabel()">
             @bind($model ?? null)
 
-                <x-input col="6" name="kartu_barcode" id="kartu_barcode" autofocus autocomplete="off" spellcheck="false" placeholder="Tempelkan kartu NFC…" helper="Tempelkan kartu NFC — UID masuk otomatis + Enter" />
+                <x-input col="6" name="kartu_barcode" id="kartu_barcode" autofocus autocomplete="off" spellcheck="false" placeholder="Tempelkan kartu NFC…" helper="Tempelkan kartu NFC — UID masuk & tersimpan otomatis" />
                 <x-select col="6" name="kartu_id_user" label="Pengguna" :options="$pengguna" />
                 <x-select col="6" name="kartu_id_orangtua" label="Orang Tua" :options="$ortu" />
                 <x-input col="3" name="kartu_nis" label="NIS" />
@@ -79,19 +79,37 @@
         const originalBarcode = @json(isset($model) && $model->exists ? (string) $model->kartu_barcode : '');
         let tapKartuId = null; // kartu_id pemilik barcode yang ditempel (null = kartu baru)
 
+        // Auto-proses setelah scan selesai — reader NFC yang tidak mengirim Enter tetap tersimpan.
+        let idleTimer = null;
+        function scheduleScan() {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => {
+                const code = nfcClean(input.value);
+                if (code.length < 4) return;
+                // Hanya wedge (ketikan cepat); ketik manual tetap lewat Enter.
+                const wedge = firstKeyAt && (performance.now() - firstKeyAt) < (code.length * 60 + 250);
+                if (wedge) handleTap();
+            }, 220);
+        }
+
         // Fokus = select-all supaya ketikan wedge MENGGANTI barcode lama, bukan nempel di belakangnya.
         input.addEventListener('focus', () => { try { input.select(); } catch (e) {} });
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); handleTap(); return; }
+            if (e.key === 'Enter') { e.preventDefault(); clearTimeout(idleTimer); handleTap(); return; }
             if (e.key.length === 1 && !firstKeyAt) firstKeyAt = performance.now();
         });
-        input.addEventListener('input', () => { if (!input.value) firstKeyAt = 0; });
+        input.addEventListener('input', () => {
+            if (!input.value) firstKeyAt = 0;
+            scheduleScan();
+        });
         // Lepas-pasang ulang supaya tidak menumpuk tiap wire:navigate.
         if (window.__kartuNfcDoc) document.removeEventListener('focusout', window.__kartuNfcDoc);
         window.__kartuNfcDoc = () => {
             setTimeout(() => {
                 const el = document.querySelector('input[name="kartu_barcode"]');
-                if (el && (!document.activeElement || document.activeElement === document.body)) el.focus({ preventScroll: true });
+                const a = document.activeElement;
+                const typing = a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable);
+                if (el && !typing) el.focus({ preventScroll: true });
             }, 400);
         };
         document.addEventListener('focusout', window.__kartuNfcDoc);
@@ -107,7 +125,11 @@
             }
             if (code.length < 2) { input.focus(); return; }
             const now = Date.now();
-            if (nfcSame(code, lastUid) && now - lastAt < 2000) { setInfo('err', 'Kartu sudah diproses, angkat dulu kartunya.'); beep(false); return; }
+            if (nfcSame(code, lastUid) && now - lastAt < 2000) {
+                // Auto-proses idle lalu Enter telat → jangan tampilkan error ganda.
+                if (now - lastAt > 700) { setInfo('err', 'Kartu sudah diproses, angkat dulu kartunya.'); beep(false); }
+                return;
+            }
             lastUid = code; lastAt = now;
             busy = true;
             firstKeyAt = 0;
