@@ -20,10 +20,23 @@ class KartuController extends Controller
 
     protected function share($data = [])
     {
+        $model = $data['model'] ?? $this->model;
+
+        // Pemilik kartu saat edit harus selalu ada di opsi — kalau role-nya bukan
+        // 'pengguna' lagi, dropdown jadi kosong sehingga pemilik tidak bisa dipilih.
+        $pengguna = User::where('role', 'pengguna')->pluck('name', 'id')->all();
+        $ownerId = $model?->kartu_id_user;
+        if ($ownerId && ! isset($pengguna[$ownerId])) {
+            $owner = User::find($ownerId);
+            if ($owner) {
+                $pengguna = [$ownerId => $owner->name] + $pengguna;
+            }
+        }
+
         $default = [
             'model' => $this->model,
             'status' => KartuStatusEnum::getOptions(),
-            'pengguna' => User::where('role', 'pengguna')->pluck('name', 'id'),
+            'pengguna' => $pengguna,
             'ortu' => User::where('role', 'orang_tua')->pluck('name', 'id'),
         ];
 

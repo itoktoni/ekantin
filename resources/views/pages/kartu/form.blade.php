@@ -77,6 +77,7 @@
         let busy = false, lastUid = '', lastAt = 0, firstKeyAt = 0;
         const currentId = @json(isset($model) && $model->exists ? (int) $model->kartu_id : null);
         const originalBarcode = @json(isset($model) && $model->exists ? (string) $model->kartu_barcode : '');
+        const currentUserId = @json(isset($model) && $model->exists ? $model->kartu_id_user : null);
         let tapKartuId = null; // kartu_id pemilik barcode yang ditempel (null = kartu baru)
 
         // Auto-proses setelah scan selesai — reader NFC yang tidak mengirim Enter tetap tersimpan.
@@ -167,8 +168,12 @@
                 input.value = nfcUid(code) || code;
                 const selectUser = document.querySelector('select[name="kartu_id_user"]');
                 const selectStatus = document.querySelector('select[name="kartu_status"]');
+                // Mode edit: pemilik kartu sudah terpatok → pakai pemilik lama, tak perlu pilih ulang.
+                if (currentId && selectUser && !selectUser.value && currentUserId) {
+                    selectUser.value = String(currentUserId);
+                }
                 const kurang = [];
-                if (selectUser && !selectUser.value) kurang.push('Pengguna');
+                if (!currentId && selectUser && !selectUser.value) kurang.push('Pengguna');
                 if (selectStatus && !selectStatus.value) kurang.push('Status');
                 if (kurang.length) {
                     // Field wajib belum diisi → jangan submit (cegah error "required" dari server).
