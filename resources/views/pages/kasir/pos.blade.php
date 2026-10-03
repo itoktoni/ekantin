@@ -440,6 +440,7 @@
         let lastUid = '';
         let lastUidAt = 0;
         let firstKeyAt = 0;
+        let prevBarcode = ''; // barcode hasil scan sebelumnya — dibersihkan sebelum scan kartu baru
 
         // Normalisasi UID: kupas prefix/suffix wedge umum + separator, huruf besar.
         // Kode label lama (SW-1001) mengandung non-hex → dibiarkan apa adanya.
@@ -525,6 +526,8 @@
             setTimeout(() => { if (mode === 'kartu') kartuInput.focus({ preventScroll: true }); }, 300);
         });
 
+        // Saat fokus kembali ke kolom scan, pilih semua isi supaya scan baru menggantikan yang lama.
+        kartuInput.addEventListener('focus', () => { try { kartuInput.select(); } catch (e) {} });
         // Deteksi burst wedge: catat waktu ketik pertama untuk bedakan tap NFC vs ketik manual.
         kartuInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -532,13 +535,28 @@
                 handleNfcTap();
                 return;
             }
-            if (e.key.length === 1 && !firstKeyAt) firstKeyAt = performance.now();
+            if (e.key.length === 1) {
+                // Scan kartu baru tapi input masih berisi barcode scan sebelumnya → bersihkan dulu.
+                if (prevBarcode && nfcSame(kartuInput.value, prevBarcode)) {
+                    kartuInput.value = '';
+                    prevBarcode = '';
+                    kartuTerpilih.textContent = '';
+                    kartuTerpilih.classList.add('hidden');
+                }
+                if (!firstKeyAt) firstKeyAt = performance.now();
+            }
         });
         kartuInput.addEventListener('input', () => { if (!kartuInput.value) firstKeyAt = 0; });
 
         async function handleNfcTap() {
             if (mode !== 'kartu' || nfcBusy) return;
-            const code = nfcClean(kartuInput.value);
+            let code = nfcClean(kartuInput.value);
+            // Jaga-jaga kalau wedge sempat menempel ke barcode scan sebelumnya.
+            if (prevBarcode && code.length > prevBarcode.length) {
+                const low = code.toLowerCase(), old = prevBarcode.toLowerCase();
+                if (low.startsWith(old)) code = code.slice(prevBarcode.length).trim();
+                else if (low.endsWith(old)) code = code.slice(0, code.length - prevBarcode.length).trim();
+            }
             if (code.length < 2) { kartuInput.focus(); return; }
             // Dedup: tempelan ganda / kartu masih nempel — telan UID sama dalam 2 detik (banding ternormalisasi).
             const now = Date.now();
@@ -564,11 +582,14 @@
             const pas = rows.find((r) => nfcSame(r.barcode, code));
             if (!pas) {
                 setStatus('err', 'Kartu ' + code + ' tidak terdaftar.');
+                kartuInput.value = '';
+                prevBarcode = '';
                 beep(false); nfcBusy = false; kartuInput.focus(); kartuInput.select();
                 return;
             }
             // Normalisasi ke kode unik resmi + tampilkan user-nya.
             kartuInput.value = pas.barcode;
+            prevBarcode = pas.barcode;
             kartuTerpilih.textContent = pas.nama + ' • ' + rupiah(pas.saldo);
             kartuTerpilih.classList.remove('hidden');
             hasilKartu.classList.add('hidden');
