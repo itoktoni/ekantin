@@ -54,7 +54,24 @@
                 <p class="text-sm">Pengguna: <strong>{{ $kartu->hasUser?->name ?? '-' }}</strong> ({{ $kartu->kartu_nis ?? '-' }} / {{ $kartu->kartu_kelas ?? '-' }})</p>
                 <p class="text-sm">Saldo terkini: <strong>Rp{{ number_format((int) $kartu->kartu_saldo, 0, ',', '.') }}</strong></p>
             </div>
-            <x-input col="6" type="number" name="nominal" label="Nominal Tunai (Rp)" />
+            <x-input col="6" type="number" name="nominal" id="nominalTunai" label="Nominal Tunai (Rp)" />
+            <div class="col-span-12">
+                <label class="font-body-sm text-body-sm font-bold text-on-surface-variant block mb-1">Nominal Cepat</label>
+                <div id="nominalCepat" class="flex flex-wrap gap-2" role="group" aria-label="Nominal cepat">
+                    @foreach ([100000, 50000, 20000, 10000, 5000, 2000] as $nom)
+                    <button type="button" data-nominal="{{ $nom }}"
+                        class="inline-flex h-11 min-w-[4.75rem] items-center justify-center rounded-xl border border-outline-variant bg-surface-container px-4 text-sm font-semibold text-on-surface transition hover:border-primary hover:text-primary active:scale-95">
+                        {{ number_format($nom / 1000, 0, ',', '.') }}rb
+                    </button>
+                    @endforeach
+                    <button type="button" id="nominalReset"
+                        class="inline-flex h-11 items-center justify-center rounded-xl border border-outline-variant bg-surface-container px-4 text-sm font-semibold text-error transition hover:border-error active:scale-95">
+                        Reset
+                    </button>
+                </div>
+                <p id="nominalTunaiText" class="mt-1 text-xs font-semibold text-primary"></p>
+                <p class="text-xs text-on-surface-variant">Klik nominal untuk menambah (mis. 50rb + 20rb + 5rb = 75rb).</p>
+            </div>
         </x-card>
 
         <x-action :model="$model" :action="['save']" />
@@ -158,6 +175,40 @@
         }
 
         input.focus({ preventScroll: true });
+    })();
+    </script>
+
+    <script>
+    (function () {
+        const nominal = document.getElementById('nominalTunai');
+        const box = document.getElementById('nominalCepat');
+        const teks = document.getElementById('nominalTunaiText');
+        if (!nominal || !box) return;
+
+        function sync() {
+            const n = parseInt(nominal.value || '0', 10) || 0;
+            if (teks) teks.textContent = n > 0 ? 'Total: Rp' + n.toLocaleString('id-ID') : '';
+        }
+
+        box.addEventListener('click', (e) => {
+            const tombol = e.target.closest('[data-nominal]');
+            if (tombol) {
+                const tambah = parseInt(tombol.dataset.nominal, 10) || 0;
+                nominal.value = String((parseInt(nominal.value || '0', 10) || 0) + tambah);
+                nominal.dispatchEvent(new Event('input', { bubbles: true }));
+                nominal.dispatchEvent(new Event('change', { bubbles: true }));
+                sync();
+                return;
+            }
+            if (e.target.closest('#nominalReset')) {
+                nominal.value = '';
+                nominal.dispatchEvent(new Event('input', { bubbles: true }));
+                sync();
+                nominal.focus();
+            }
+        });
+        nominal.addEventListener('input', sync);
+        sync();
     })();
     </script>
 </x-layouts::app>
