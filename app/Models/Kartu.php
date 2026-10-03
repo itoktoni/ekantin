@@ -14,6 +14,11 @@ class Kartu extends BaseModel
 
     protected $primaryKey = 'kartu_id';
 
+    // Default saat form create: status langsung "aktif" supaya scan NFC bisa simpan otomatis.
+    protected $attributes = [
+        'kartu_status' => 'aktif',
+    ];
+
     protected $fillable = [
         'kartu_barcode',
         'kartu_id_user',

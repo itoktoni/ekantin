@@ -162,22 +162,30 @@
                 const sel = document.querySelector('select[name="kartu_id_user"]');
                 if (sel) sel.focus({ preventScroll: true });
             } else {
-                // UID baru belum terdaftar → clear barcode lama, isi ID NFC baru (kanonis Uppercase tanpa separator).
+                // UID baru belum terdaftar → isi barcode kanonis (Uppercase tanpa separator).
                 tapKartuId = null;
                 input.value = nfcUid(code) || code;
-                if (currentId) {
-                    // Mode GANTI (Edit): langsung simpan otomatis, tanpa klik Save.
-                    setInfo('ok', 'Mengganti ke ' + code + ' … menyimpan otomatis.');
-                    beep(true);
+                const selectUser = document.querySelector('select[name="kartu_id_user"]');
+                const selectStatus = document.querySelector('select[name="kartu_status"]');
+                const kurang = [];
+                if (selectUser && !selectUser.value) kurang.push('Pengguna');
+                if (selectStatus && !selectStatus.value) kurang.push('Status');
+                if (kurang.length) {
+                    // Field wajib belum diisi → jangan submit (cegah error "required" dari server).
+                    setInfo('err', 'Kartu ' + code + ' terbaca — pilih ' + kurang.join(' & ') + ' dulu, lalu tempel ulang.');
+                    beep(false);
+                    const target = (selectUser && !selectUser.value) ? selectUser : selectStatus;
+                    if (target) target.focus({ preventScroll: true });
                     busy = false;
-                    const frm = input.closest('form');
-                    setTimeout(() => { if (frm) frm.requestSubmit(); }, 600);
                     return;
                 }
-                setInfo('ok', 'Kartu baru ' + code + ' — belum terdaftar. Pilih Pengguna/NIS/Kelas lalu Save untuk link.');
+                // Mode baru / ganti kartu: langsung simpan otomatis, tanpa klik Save.
+                setInfo('ok', (currentId ? 'Mengganti ke ' : 'Menyimpan ') + code + ' … menyimpan otomatis.');
                 beep(true);
-                const sel = document.querySelector('select[name="kartu_id_user"]');
-                if (sel) sel.focus({ preventScroll: true });
+                busy = false;
+                const frm = input.closest('form');
+                setTimeout(() => { if (frm) frm.requestSubmit(); }, 600);
+                return;
             }
             busy = false;
         }
