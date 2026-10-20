@@ -21,6 +21,9 @@
                 </div>
                 @if($p['sudah'])
                 <div class="mt-3 text-xs px-2 py-1 rounded bg-success/10 text-success border border-success/20">Sudah dibagi {{ formatDate($p['sudah']->pembagian_tanggal) }} • {{ formatAngka((int)$p['sudah']->pembagian_bersih,'Rp') }} oleh {{ $p['sudah']->hasKasir?->name ?? '-' }}</div>
+                @if($p['sudah']->hasPenarikan)
+                <a href="{{ route('penarikan.getTable') }}" class="mt-1 block text-xs px-2 py-1 rounded bg-primary/10 text-primary border border-primary/20">Penarikan #{{ $p['sudah']->hasPenarikan->penarikan_id }} • {{ $p['sudah']->hasPenarikan->penarikan_status }} • {{ formatAngka((int)$p['sudah']->hasPenarikan->penarikan_nominal,'Rp') }}</a>
+                @endif
                 @elseif(in_array(auth()->user()?->role, ['kasir_sekolah','super_admin','admin']))
                 <form action="{{ route('pembagian.postBagi') }}" method="POST" class="mt-3">
                     @csrf

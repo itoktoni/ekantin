@@ -19,6 +19,7 @@ class Pembagian extends BaseModel
         'pembagian_bersih',
         'pembagian_status',
         'pembagian_id_kasir',
+        'pembagian_id_penarikan',
         'pembagian_catatan',
     ];
 
@@ -64,6 +65,11 @@ class Pembagian extends BaseModel
     public function hasGerai(): BelongsTo
     {
         return $this->belongsTo(Gerai::class, 'pembagian_id_gerai', 'gerai_id');
+    }
+
+    public function hasPenarikan(): BelongsTo
+    {
+        return $this->belongsTo(Penarikan::class, 'pembagian_id_penarikan', 'penarikan_id');
     }
 
     public function hasKasir(): BelongsTo

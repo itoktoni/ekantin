@@ -10,4 +10,6 @@ trait PembagianEntity
     public function getFieldPembagianTanggalAttribute() { return $this->{static::field_pembagian_tanggal()}; }
     public static function field_pembagian_id_gerai() { return 'pembagian_id_gerai'; }
     public function getFieldPembagianIdGeraiAttribute() { return $this->{static::field_pembagian_id_gerai()}; }
+    public static function field_pembagian_id_penarikan() { return 'pembagian_id_penarikan'; }
+    public function getFieldPembagianIdPenarikanAttribute() { return $this->{static::field_pembagian_id_penarikan()}; }
 }

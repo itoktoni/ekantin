@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Ekantin\WithdrawAction;
 use App\Concerns\ControllerTrait;
 use App\Http\Requests\GeneralRequest;
 use App\Models\Gerai;
 use App\Models\Pembagian;
+use App\Models\Penarikan;
 use App\Models\Transaksi;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PembagianController extends Controller
 {
@@ -120,17 +123,47 @@ class PembagianController extends Controller
         if ($total == 0) $feeGerai = 0;
         $bersih = max($total - $feeGerai, 0);
 
-        $pembagian = Pembagian::create([
-            'pembagian_tanggal' => $tanggal,
-            'pembagian_id_gerai' => $gerai->gerai_id,
-            'pembagian_total' => $total,
-            'pembagian_fee' => $feeGerai,
-            'pembagian_bersih' => $bersih,
-            'pembagian_status' => 'selesai',
-            'pembagian_id_kasir' => auth()->id(),
-        ]);
-        // vendor bisa tarik: tidak auto kurangi saldo gerai, hanya history pembagian; penarikan terpisah
-        flash()->success('Pembagian '. $gerai->gerai_nama .' '.formatDate($tanggal).' bersih '.formatAngka($bersih,'Rp').' tercatat');
+        $pembagian = null;
+        $penarikan = null;
+        DB::transaction(function () use ($tanggal, $gerai, $total, $feeGerai, $bersih, &$pembagian, &$penarikan) {
+                $pembagian = Pembagian::create([
+                    'pembagian_tanggal' => $tanggal,
+                    'pembagian_id_gerai' => $gerai->gerai_id,
+                    'pembagian_total' => $total,
+                    'pembagian_fee' => $feeGerai,
+                    'pembagian_bersih' => $bersih,
+                    'pembagian_status' => 'selesai',
+                    'pembagian_id_kasir' => auth()->id(),
+                ]);
+                // Bagi langsung membuat penarikan untuk vendor (potong saldo gerai, status Diajukan).
+                // Kalau vendor sudah mengajukan duluan via /penarikan/ajukan, pakai pengajuan itu (cegah ganda).
+                if ($bersih >= 1) {
+                    $penarikan = Penarikan::where('penarikan_tanggal', $tanggal)
+                        ->where('penarikan_id_gerai', $gerai->gerai_id)
+                        ->whereIn('penarikan_status', ['diajukan', 'diselesaikan'])
+                        ->first();
+                    if (! $penarikan) {
+                        $res = WithdrawAction::run([
+                            'gerai_id' => $gerai->gerai_id,
+                            'nominal' => $bersih,
+                            'id_admin' => auth()->id(),
+                        ]);
+                        if (! $res['status']) {
+                            throw ValidationException::withMessages(['gerai_id' => is_string($res['data']) ? $res['data'] : 'Penarikan gagal dibuat']);
+                        }
+                        $penarikan = $res['data'];
+                        $penarikan->update(['penarikan_tanggal' => $tanggal]);
+                    }
+                    $pembagian->update(['pembagian_id_penarikan' => $penarikan->penarikan_id]);
+                }
+            });
+        if ($penarikan) {
+            flash()->success('Pembagian '.$gerai->gerai_nama.' '.formatDate($tanggal).' bersih '.formatAngka($bersih, 'Rp').' tercatat + penarikan #'.$penarikan->penarikan_id.' diajukan — lanjutkan penukaran di Penarikan');
+
+            return redirect()->route('penarikan.getTable');
+        }
+        flash()->success('Pembagian '. $gerai->gerai_nama .' '.formatDate($tanggal).' bersih '.formatAngka($bersih,'Rp').' tercatat (nihil — tanpa penarikan)');
+
         return redirect()->route('pembagian.getTable');
     }
 }

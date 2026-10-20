@@ -30,6 +30,7 @@
                 <x-table-sort field="pembagian_bersih" label="Bersih" :sortField="$sortField" :sortDir="$sortDir" />
                 <th>Gerai</th>
                 <th>Kasir</th>
+                <th>Penarikan</th>
             </x-slot:head>
             <x-slot:body>
                 @foreach($data as $table)
@@ -41,6 +42,7 @@
                     <td class="font-mono font-bold">{{ formatAngka((int)$table->pembagian_bersih,'Rp') }}</td>
                     <td>{{ $table->hasGerai?->gerai_nama ?? '-' }}</td>
                     <td>{{ $table->hasKasir?->name ?? '-' }}</td>
+                    <td>{{ $table->hasPenarikan ? '#'.$table->hasPenarikan->penarikan_id.' • '.$table->hasPenarikan->penarikan_status : '-' }}</td>
                 </tr>
                 @endforeach
             </x-slot:body>
@@ -51,7 +53,7 @@
                     <div class="border rounded-xl p-3 bg-surface-container-lowest">
                         <div class="font-bold text-sm">{{ $table->hasGerai?->gerai_nama ?? '-' }} • {{ formatDate($table->pembagian_tanggal) }}</div>
                         <div class="text-xs font-mono">Total {{ formatAngka((int)$table->pembagian_total,'Rp') }} • Bersih {{ formatAngka((int)$table->pembagian_bersih,'Rp') }}</div>
-                        <div class="text-xs">Fee {{ formatAngka((int)$table->pembagian_fee,'Rp') }} • Kasir {{ $table->hasKasir?->name ?? '-' }}</div>
+                        <div class="text-xs">Fee {{ formatAngka((int)$table->pembagian_fee,'Rp') }} • Kasir {{ $table->hasKasir?->name ?? '-' }} • {{ $table->hasPenarikan ? 'Penarikan #'.$table->hasPenarikan->penarikan_id.' ('.$table->hasPenarikan->penarikan_status.')' : 'Tanpa penarikan' }}</div>
                     </div>
                     @endforeach
                 </div>
