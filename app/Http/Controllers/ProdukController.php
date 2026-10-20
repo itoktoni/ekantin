@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Concerns\ControllerTrait;
 use App\Enums\Ekantin\ProdukKategoriEnum;
-use App\Enums\Ekantin\ProdukLabelEnum;
 use App\Enums\Ekantin\ProdukStatusEnum;
 use App\Http\Requests\GeneralRequest;
 use App\Models\Gerai;
+use App\Models\Label;
 use App\Models\Produk;
 use Illuminate\Validation\ValidationException;
 
@@ -38,7 +38,7 @@ class ProdukController extends Controller
             'model' => $this->model,
             'status' => ProdukStatusEnum::getOptions(),
             'kategori' => ProdukKategoriEnum::getOptions(),
-            'label' => ProdukLabelEnum::getOptions(),
+            'label' => Label::orderBy('label_nama')->pluck('label_nama', 'label_nama'),
             'gerai' => $gerai->pluck('gerai_nama', 'gerai_id'),
         ], $data);
     }

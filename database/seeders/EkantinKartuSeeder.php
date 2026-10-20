@@ -12,9 +12,9 @@ class EkantinKartuSeeder extends Seeder
     {
         $kartu = [
             // [barcode, email pengguna, email ortu, nis, kelas, saldo, limit, label dilarang, catatan kesehatan]
-            ['SW-1001', 'ayu@sekolah.id', 'siti@sekolah.id', 'NIS1001', '7A', 100000, 30000, ['tidak_sehat'], 'Alergi kacang & batuk — hanya boleh yang sehat'],
+            ['SW-1001', 'ayu@sekolah.id', 'siti@sekolah.id', 'NIS1001', '7A', 100000, 30000, ['manis', 'alergen'], 'Alergi seafood & batuk — hindari manis'],
             ['SW-1002', 'bima@sekolah.id', 'siti@sekolah.id', 'NIS1002', '7A', 75000, 30000, [], null],
-            ['SW-1003', 'citra@sekolah.id', 'dewi@sekolah.id', 'NIS1003', '8B', 50000, 25000, ['tidak_sehat'], 'Sedang flu — hanya boleh yang sehat'],
+            ['SW-1003', 'citra@sekolah.id', 'dewi@sekolah.id', 'NIS1003', '8B', 50000, 25000, ['manis'], 'Sedang flu — hindari manis'],
             ['SW-1004', 'dimas@sekolah.id', 'dewi@sekolah.id', 'NIS1004', '8B', 50000, null, [], null],
             ['SW-1005', 'eka@sekolah.id', null, 'NIS1005', '9C', 100000, 50000, [], null],
         ];

@@ -13,5 +13,5 @@ test('ekspor csv dan pdf memuat data filter aktif', function () {
     $admin = User::create(['name' => 'A', 'email' => 'a@x.id', 'password' => 'secret123', 'role' => 'super_admin']);
     $this->actingAs($admin);
     $this->get(route('laporan.ekspor', ['format' => 'csv']))->assertOk();
-    $this->get(route('laporan.ekspor', ['format' => 'pdf']))->assertOk();
+    $this->get(route('laporan.ekspor', ['format' => 'pdf']))->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
 });

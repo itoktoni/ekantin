@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Concerns\ControllerTrait;
 use App\Enums\Ekantin\KartuStatusEnum;
-use App\Enums\Ekantin\ProdukLabelEnum;
 use App\Http\Requests\GeneralRequest;
 use App\Models\Kartu;
+use App\Models\Label;
 use App\Models\Produk;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -86,7 +86,7 @@ class KartuController extends Controller
         return $this->views('pages.kartu.batas', [
             'kartus' => $kartus,
             'kelompok' => $produk,
-            'labelOptions' => ProdukLabelEnum::getOptions(),
+            'labelOptions' => Label::orderBy('label_nama')->pluck('label_nama', 'label_nama')->all(),
         ]);
     }
 
@@ -96,7 +96,7 @@ class KartuController extends Controller
             'kartu_id' => 'required|integer|exists:kartu,kartu_id',
             'kartu_limit_harian' => 'nullable|integer|min:0',
             'kartu_label_dilarang' => 'nullable|array',
-            'kartu_label_dilarang.*' => 'in:sehat,tidak_sehat',
+            'kartu_label_dilarang.*' => 'string|max:50|exists:label,label_nama',
             'kartu_produk_dilarang' => 'nullable|array',
             'kartu_produk_dilarang.*' => 'integer|exists:produk,produk_id',
             'kartu_catatan_kesehatan' => 'nullable|string|max:255',

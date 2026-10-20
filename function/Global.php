@@ -4,6 +4,7 @@ use App\Flasher\Flash;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 define('ACTION_CREATE', 'getCreate');
@@ -45,6 +46,40 @@ function formatDate($value, $datetime = false)
 function formatAngka(int $value, $simbol = null)
 {
     return $simbol.number_format($value, 0, ',', '.');
+}
+
+// Saring rincian fee untuk tampil: bila filter fee dipilih, hanya fee itu
+// ('lainnya' = jumlah kode warisan di luar master). Tanpa filter tampil semua.
+function feeTampil(array $rincian, ?string $dipilih): array
+{
+    if (! $dipilih) {
+        return $rincian;
+    }
+    if ($dipilih === 'lainnya') {
+        $master = array_keys(\App\Models\Fee::namaMap());
+        $sum = collect($rincian)->except($master)->sum();
+
+        return $sum > 0 ? ['lainnya' => $sum] : [];
+    }
+
+    return isset($rincian[$dipilih]) ? [$dipilih => $rincian[$dipilih]] : [];
+}
+// Tarif fee dari master: "2%" untuk persen, "Rp500 flat" untuk nominal, "" bila kode tak dikenal.
+function feeTarif(?string $code): string
+{
+    static $map;
+    if ($map === null) {
+        $map = \App\Models\Fee::query()->orderBy('fee_id')->get(['code_fee', 'fee_tipe', 'value_fee'])->keyBy('code_fee');
+    }
+    $fee = $map[$code] ?? null;
+    if (! $fee) {
+        return '';
+    }
+    if ($fee->fee_tipe === 'nominal') {
+        return formatAngka((int) $fee->value_fee, 'Rp').' flat';
+    }
+
+    return rtrim(rtrim(number_format((float) $fee->value_fee, 2, ',', '.'), '0'), ',').'%';
 }
 
 /**
@@ -452,24 +487,20 @@ function uploadFile($file, string $folder = 'uploads', array $options = []): str
     // Sanitize filename
     $filename = sanitizeFileName($file->getClientOriginalName());
 
-    // Ensure folder exists
-    $targetDir = storage_path('app/public/'.$folder);
-    if (! is_dir($targetDir)) {
-        mkdir($targetDir, 0755, true);
-    }
+    // Simpan via disk public (storage/app/public) agar bisa diakses via /storage.
+    // ponytail: jangan $file->storeAs('public/...') di disk default — root disk
+    // local adalah storage/app/private sehingga file nyasar dan chmod 500.
+    $stored = Storage::disk('public')->putFileAs($folder, $file, $filename);
 
-    // Move file to storage
-    $path = $file->storeAs('public/'.$folder, $filename);
-
-    if (! $path) {
+    if (! $stored) {
         throw new InvalidArgumentException('Gagal menyimpan file.');
     }
 
     // Ensure file permissions are safe
-    chmod(storage_path('app/'.$path), 0644);
+    chmod(Storage::disk('public')->path($stored), 0644);
 
     // Return relative public path
-    return $folder.'/'.$filename;
+    return $stored;
 }
 
 /**

@@ -102,13 +102,27 @@ class ProcessPurchaseAction
                     'transaksi_fee_pengelolaan' => 0,
                     'transaksi_fee_sistem' => 0,
                     'transaksi_fee_total' => $feeTotal,
-                    'transaksi_fee_rincian' => $rincianFee,
                     'transaksi_bersih' => $bersihTotal,
                     'transaksi_saldo_akhir' => $saldoAkhir,
                     'transaksi_limit_snapshot' => $isWalkin ? null : $kartu->kartu_limit_harian,
                     'transaksi_idempotency' => $input['idempotency'] ?? ($isWalkin ? 'POS-W-'.time() : 'POS-'.$kartu->kartu_id.'-'.time()),
                     'transaksi_id_kasir' => $input['id_kasir'] ?? null,
                 ]);
+                // Fee disimpan relasional (transaksi_fee) — bukan JSON/kolom hardcode.
+                if ($rincianFee !== []) {
+                    $feeIds = Fee::query()->pluck('fee_id', 'code_fee');
+                    $feePersen = Fee::persenMap();
+                    $feeTipe = Fee::tipeMap();
+                    $trx->hasFees()->createMany(
+                        collect($rincianFee)->map(fn ($nominal, $code) => [
+                            'tfee_id_fee' => $feeIds[$code] ?? null,
+                            'tfee_code' => (string) $code,
+                            'tfee_tipe' => $feeTipe[$code] ?? 'persen',
+                            'tfee_persen' => $feePersen[$code] ?? 0,
+                            'tfee_nominal' => (int) $nominal,
+                        ])->values()->all()
+                    );
+                }
                 foreach ($rows as $r) {
                     $trx->hasItems()->create(['item_id_gerai' => $r['gerai_id'], 'item_nama' => $r['nama'], 'item_harga' => $r['harga'], 'item_qty' => $r['qty'], 'item_subtotal' => $r['subtotal'], 'item_status' => 'baru']);
                 }

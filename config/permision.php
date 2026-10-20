@@ -66,6 +66,15 @@ foreach (['table','save','create','update','delete','show','pesanan','pesananCet
     $restrict['kasir_sekolah']['kartu.postCreate'][] = $act;
     $restrict['kasir_sekolah']['kartu.getUpdate'][] = $act;
     $restrict['kasir_sekolah']['kartu.postUpdate'][] = $act;
+    // master label — kasir tidak boleh (seperti produk)
+    $restrict['kasir_sekolah']['label.getTable'][] = $act;
+    $restrict['kasir_sekolah']['label.getCreate'][] = $act;
+    $restrict['kasir_sekolah']['label.postCreate'][] = $act;
+    $restrict['kasir_sekolah']['label.getUpdate'][] = $act;
+    $restrict['kasir_sekolah']['label.postUpdate'][] = $act;
+    $restrict['kasir_sekolah']['label.getDelete'][] = $act;
+    $restrict['kasir_sekolah']['label.postDelete'][] = $act;
+    $restrict['kasir_sekolah']['label.getShow'][] = $act;
     // gerai CRUD — hide, tapi pesanan tetap boleh
     $restrict['kasir_sekolah']['gerai.getTable'][] = $act;
     $restrict['kasir_sekolah']['gerai.getCreate'][] = $act;
@@ -102,6 +111,8 @@ foreach (['table','save','create','update','delete','show','pesanan','pos','stru
     $restrict['orang_tua']['gerai.postCreate'][] = $act;
     $restrict['orang_tua']['produk.getTable'][] = $act;
     $restrict['orang_tua']['produk.getCreate'][] = $act;
+    $restrict['orang_tua']['label.getTable'][] = $act;
+    $restrict['orang_tua']['label.getCreate'][] = $act;
     $restrict['orang_tua']['penarikan.getTable'][] = $act;
     $restrict['orang_tua']['user.getTable'][] = $act;
     foreach (['cms-type','field','section','content','category','tag','menu'] as $cms) $restrict['orang_tua'][$cms.'.getTable'][] = $act;
@@ -117,6 +128,7 @@ foreach (['table','save','create','update','delete','show','pesanan','pos','stru
     $restrict['pengguna']['gerai.getTable'][] = $act;
     $restrict['pengguna']['gerai.getCreate'][] = $act;
     $restrict['pengguna']['produk.getTable'][] = $act;
+    $restrict['pengguna']['label.getTable'][] = $act;
     $restrict['pengguna']['penarikan.getTable'][] = $act;
     $restrict['pengguna']['user.getTable'][] = $act;
     foreach (['cms-type','field','section','content','category','tag','menu'] as $cms) $restrict['pengguna'][$cms.'.getTable'][] = $act;
@@ -142,6 +154,21 @@ foreach (['orang_tua', 'pengguna'] as $peran) {
 // Topup QRIS konfirmasi hanya kasir/admin — orang tua/pengguna/vendor tidak boleh flag berhasil
 foreach (['orang_tua','pengguna','vendor'] as $peran) {
     $restrict[$peran]['topup.web.bayar'][] = 'webbayar';
+}
+// Laporan terpisah (laporan.transaksi/fee/vendor/penarikan):
+// - kasir hanya boleh penarikan (penukaran uang)
+// - orang_tua/pengguna tidak boleh vendor & penarikan
+// (cerminan assertLaporanAkses() di LaporanController agar tombol UI ikut hilang).
+foreach (['table', 'save', 'create', 'update', 'delete', 'show', 'transaksi', 'fee', 'vendor'] as $act) {
+    $restrict['kasir_sekolah']['laporan.transaksi'][] = $act;
+    $restrict['kasir_sekolah']['laporan.fee'][] = $act;
+    $restrict['kasir_sekolah']['laporan.vendor'][] = $act;
+}
+foreach (['orang_tua', 'pengguna'] as $peran) {
+    foreach (['table', 'save', 'create', 'update', 'delete', 'show', 'vendor', 'penarikan'] as $act) {
+        $restrict[$peran]['laporan.vendor'][] = $act;
+        $restrict[$peran]['laporan.penarikan'][] = $act;
+    }
 }
 // Pembagian harian: kasir BOLEH (pelaku bagi — getTable/getBagi/postBagi);
 // vendor hanya lihat history (table); orang tua/pengguna tidak boleh sama sekali.
@@ -176,8 +203,18 @@ foreach (['bagi','save','create','update','delete'] as $act) {
 }
 // Vendor transaksi: read-only (lihat table + detail via getUpdate) — sembunyikan tombol delete/create di table.
 // Backend create/update/delete juga ditolak via policy (controller sudah abort 404 sebagai lapis kedua).
-foreach (['save','create','delete'] as $act) {
+// Refund (pembatalan) hanya admin & kasir — vendor/orang_tua/pengguna ditolak (tombol + backend via policy).
+foreach (['save','create','delete','refund'] as $act) {
     $restrict['vendor']['transaksi.getTable'][] = $act;
+    $restrict['vendor']['transaksi.getUpdate'][] = $act;
+    $restrict['vendor']['transaksi.postRefund'][] = $act;
+}
+foreach (['orang_tua', 'pengguna'] as $peran) {
+    foreach (['refund'] as $act) {
+        $restrict[$peran]['transaksi.getTable'][] = $act;
+        $restrict[$peran]['transaksi.getUpdate'][] = $act;
+        $restrict[$peran]['transaksi.postRefund'][] = $act;
+    }
 }
 foreach (['save','create','delete','show','update','table'] as $act) {
     $restrict['vendor']['transaksi.getCreate'][] = $act;
@@ -256,6 +293,7 @@ foreach (['orang_tua', 'pengguna'] as $peran) {
 }
 // Produk: orang_tua/pengguna tidak boleh sama sekali — kunci rute yang belum terdaftar
 // (getTable/getCreate sudah dikunci di atas; update/delete/show lolos via ganti ID).
+// Master label ikut dikunci penuh untuk kedua peran ini.
 foreach (['orang_tua', 'pengguna'] as $peran) {
     foreach (['table', 'save', 'create', 'update', 'delete', 'show'] as $act) {
         $restrict[$peran]['produk.getUpdate'][] = $act;
@@ -264,6 +302,14 @@ foreach (['orang_tua', 'pengguna'] as $peran) {
         $restrict[$peran]['produk.postDelete'][] = $act;
         $restrict[$peran]['produk.getShow'][] = $act;
         $restrict[$peran]['produk.postCreate'][] = $act;
+        $restrict[$peran]['label.getTable'][] = $act;
+        $restrict[$peran]['label.getCreate'][] = $act;
+        $restrict[$peran]['label.postCreate'][] = $act;
+        $restrict[$peran]['label.getUpdate'][] = $act;
+        $restrict[$peran]['label.postUpdate'][] = $act;
+        $restrict[$peran]['label.getDelete'][] = $act;
+        $restrict[$peran]['label.postDelete'][] = $act;
+        $restrict[$peran]['label.getShow'][] = $act;
     }
 }
 // Penarikan: orang_tua/pengguna/kasir tidak boleh CRUD manual — kasir hanya getTable + postTukar/postBatal

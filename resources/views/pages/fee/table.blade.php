@@ -37,7 +37,15 @@
                     <x-table-row-checkbox :model="$model" :value="$table->field_primary" />
                     <x-table-action :model="$model" :id="$table->field_primary" />
                     @foreach ($model::$sortColumns as $column)
-                    <td>{{ $column === 'value_fee' ? $table->$column.'%' : $table->$column }}</td>
+                    <td>
+                        @if($column === 'value_fee')
+                            {{ $table->fee_tipe === 'nominal' ? formatAngka((int)$table->$column,'Rp') : $table->$column.'%' }}
+                        @elseif($column === 'fee_tipe')
+                            {{ $table->$column === 'nominal' ? 'Nominal' : 'Persen' }}
+                        @else
+                            {{ $table->$column }}
+                        @endif
+                    </td>
                     @endforeach
                 </tr>
                 @endforeach
@@ -48,15 +56,15 @@
                 <div class="p-3 space-y-3" id="mBody">
                     @foreach($data as $table)
                     <div class="border border-outline-variant rounded-xl p-4 bg-surface-container-lowest shadow-sm" data-id="{{ $table->field_primary }}">
-                        <p class="text-sm font-bold text-on-surface truncate mb-3">{{ $table->nama_fee }} ({{ $table->value_fee }}%)</p>
+                        <p class="text-sm font-bold text-on-surface truncate mb-3">{{ $table->nama_fee }} ({{ $table->fee_tipe === 'nominal' ? formatAngka((int)$table->value_fee,'Rp') : $table->value_fee.'%' }})</p>
                         <div class="grid grid-cols-2 gap-3 mb-3">
                             <div>
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Kode</p>
                                 <p class="text-xs font-mono font-medium text-primary truncate">{{ $table->code_fee }}</p>
                             </div>
                             <div>
-                                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Persen</p>
-                                <p class="text-xs font-medium text-on-surface">{{ $table->value_fee }}%</p>
+                                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Tipe</p>
+                                <p class="text-xs font-medium text-on-surface">{{ $table->fee_tipe === 'nominal' ? 'Nominal' : 'Persen' }}</p>
                             </div>
                         </div>
                         <div class="flex items-center justify-between pt-2 border-t border-outline-variant/50">

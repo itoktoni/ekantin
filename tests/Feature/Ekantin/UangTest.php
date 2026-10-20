@@ -18,7 +18,8 @@ test('beli sukses potong saldo + fee snapshot, idempotency ganda satu struk', fu
         ->and($kartu->fresh()->kartu_saldo)->toBe(50000 - 20000 - 1000)
         ->and($gerai->fresh()->gerai_saldo)->toBe(20000 - 1000)
         ->and($r1['data']->transaksi_fee_total)->toBe(1000)
-        ->and($r1['data']->transaksi_fee_rincian)->toBe(['sistem' => 1000])
+        ->and($r1['data']->hasFees()->pluck('tfee_nominal', 'tfee_code')->all())->toBe(['sistem' => 1000])
+        ->and($r1['data']->feeRincian())->toBe(['sistem' => 1000])
         ->and($r2['data']->transaksi_id)->toBe($r1['data']->transaksi_id);
 });
 

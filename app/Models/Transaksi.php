@@ -16,6 +16,7 @@ class Transaksi extends BaseModel
     protected $primaryKey = 'transaksi_id';
 
     protected $fillable = [
+        'transaksi_kode',
         'transaksi_jenis',
         'transaksi_status',
         'transaksi_metode',
@@ -27,7 +28,6 @@ class Transaksi extends BaseModel
         'transaksi_fee_pengelolaan',
         'transaksi_fee_sistem',
         'transaksi_fee_total',
-        'transaksi_fee_rincian',
         'transaksi_bersih',
         'transaksi_saldo_akhir',
         'transaksi_limit_snapshot',
@@ -38,6 +38,7 @@ class Transaksi extends BaseModel
     ];
 
     public static $filterColumns = [
+        'transaksi_kode' => 'Kode',
         'transaksi_jenis' => 'Jenis',
         'transaksi_status' => 'Status',
         'nama_pengguna' => 'Nama Pengguna',
@@ -46,6 +47,7 @@ class Transaksi extends BaseModel
     ];
 
     public static $sortColumns = [
+        'transaksi_kode',
         'transaksi_jenis',
         'transaksi_status',
         'transaksi_total',
@@ -61,7 +63,6 @@ class Transaksi extends BaseModel
             'transaksi_fee_pengelolaan' => 'integer',
             'transaksi_fee_sistem' => 'integer',
             'transaksi_fee_total' => 'integer',
-            'transaksi_fee_rincian' => 'array',
             'transaksi_bersih' => 'integer',
             'transaksi_saldo_akhir' => 'integer',
             'transaksi_limit_snapshot' => 'integer',
@@ -73,9 +74,26 @@ class Transaksi extends BaseModel
         return 'transaksi_id';
     }
 
+    // Kode struk TRX-YYYYMMDD-XXXXXX: acak tanpa cek DB (52^6 kombinasi/hari),
+    // unique index sebagai jaring pengaman. Otomatis terisi untuk semua penulis.
+    public static function kodeBaru(): string
+    {
+        return 'TRX-'.now()->format('Ymd').'-'.unicString(6);
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            if (empty($model->transaksi_kode)) {
+                $model->transaksi_kode = self::kodeBaru();
+            }
+        });
+    }
+
     public function rules(): array
     {
         return [
+            'transaksi_kode' => 'nullable|string|max:20',
             'transaksi_jenis' => 'required|in:topup_web,topup_tunai,beli,refund,koreksi,withdraw',
             'transaksi_status' => 'required|in:menunggu,berhasil,gagal,dibatalkan',
             'transaksi_metode' => 'required|in:kartu,tunai,qris',
@@ -85,11 +103,12 @@ class Transaksi extends BaseModel
         ];
     }
 
-    // Total fee: kolom baru dulu, fallback jumlah 4 kolom lama (riwayat).
+    // Total fee: baris relasi dulu, fallback total/kolom lama (riwayat).
     public function feeTotal(): int
     {
-        if (is_array($this->transaksi_fee_rincian) && $this->transaksi_fee_rincian !== []) {
-            return (int) array_sum($this->transaksi_fee_rincian);
+        $fees = $this->feeRows();
+        if ($fees->isNotEmpty()) {
+            return (int) $fees->sum('tfee_nominal');
         }
         if ((int) $this->transaksi_fee_total > 0) {
             return (int) $this->transaksi_fee_total;
@@ -99,11 +118,12 @@ class Transaksi extends BaseModel
             + (int) $this->transaksi_fee_pengelolaan + (int) $this->transaksi_fee_sistem;
     }
 
-    // Rincian fee: JSON baru dulu, fallback 4 kolom lama yang > 0.
+    // Rincian fee: baris relasi [code => nominal], fallback kolom lama yang > 0.
     public function feeRincian(): array
     {
-        if (is_array($this->transaksi_fee_rincian) && $this->transaksi_fee_rincian !== []) {
-            return $this->transaksi_fee_rincian;
+        $fees = $this->feeRows();
+        if ($fees->isNotEmpty()) {
+            return $fees->pluck('tfee_nominal', 'tfee_code')->map(fn ($v) => (int) $v)->all();
         }
         $lama = [
             'kebersihan' => (int) $this->transaksi_fee_kebersihan,
@@ -113,6 +133,12 @@ class Transaksi extends BaseModel
         ];
 
         return array_filter($lama, fn ($v) => $v > 0);
+    }
+
+    // Koleksi baris transaksi_fee (memakai eager-load bila sudah ada).
+    private function feeRows()
+    {
+        return $this->relationLoaded('hasFees') ? $this->hasFees : $this->hasFees()->get();
     }
 
     public function hasKartu(): BelongsTo
@@ -138,5 +164,23 @@ class Transaksi extends BaseModel
     public function hasNotif(): HasOne
     {
         return $this->hasOne(NotifikasiLog::class, 'notif_id_transaksi', 'transaksi_id');
+    }
+
+    // Baris fee relasional (tabel transaksi_fee).
+    public function hasFees(): HasMany
+    {
+        return $this->hasMany(TransaksiFee::class, 'tfee_id_transaksi', 'transaksi_id');
+    }
+
+    // Refund (pembatalan) dari transaksi ini, jika ada.
+    public function hasRefund(): HasOne
+    {
+        return $this->hasOne(Transaksi::class, 'transaksi_id_reversal_of', 'transaksi_id');
+    }
+
+    // Transaksi asal bila baris ini adalah refund.
+    public function hasAsal(): BelongsTo
+    {
+        return $this->belongsTo(Transaksi::class, 'transaksi_id_reversal_of', 'transaksi_id');
     }
 }

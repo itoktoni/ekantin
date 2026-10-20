@@ -609,3 +609,22 @@
   background: var(--color-primary-fixed);
   box-shadow: 0 0 0 1px var(--color-primary);
 }
+
+/* ── Cetak laporan via browser (Ctrl+P) ───────────────────────────────
+   Sembunyikan navigasi + form filter/aksi, tampilkan isi saja. */
+@media print {
+  header, aside, nav, form, .no-print, #toast-container, #printer-modal, #image-browser-modal {
+    display: none !important;
+  }
+  main {
+    margin-left: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  main > div {
+    max-width: 100% !important;
+  }
+  body {
+    background: #fff !important;
+  }
+}

@@ -88,7 +88,7 @@ class PenarikanController extends Controller
             ->where('transaksi_item.item_id_gerai', $gerai->gerai_id)
             ->whereDate('transaksi.created_at', $tanggal)->where('transaksi.transaksi_jenis', 'beli')->where('transaksi.transaksi_status', 'berhasil')
             ->sum('transaksi_item.item_subtotal');
-        $feeHarian = Transaksi::whereDate('created_at', $tanggal)->where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')
+        $feeHarian = Transaksi::with('hasFees')->whereDate('created_at', $tanggal)->where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')
             ->where(fn ($q) => $q->where('transaksi_id_gerai', $gerai->gerai_id)->orWhereHas('hasItems', fn ($qq) => $qq->where('item_id_gerai', $gerai->gerai_id)))
             ->get()->sum(fn ($t) => $t->feeTotal());
         $totalSubHarian = DB::table('transaksi_item')->join('transaksi', 'transaksi.transaksi_id', '=', 'transaksi_item.item_id_transaksi')

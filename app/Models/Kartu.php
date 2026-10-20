@@ -75,17 +75,17 @@ class Kartu extends BaseModel
             'kartu_status' => 'required|in:aktif,nonaktif',
             'kartu_limit_harian' => 'nullable|integer|min:0',
             'kartu_label_dilarang' => 'nullable|array',
-            'kartu_label_dilarang.*' => 'in:sehat,tidak_sehat',
+            'kartu_label_dilarang.*' => 'string|max:50|exists:label,label_nama',
             'kartu_produk_dilarang' => 'nullable|array',
             'kartu_produk_dilarang.*' => 'integer|exists:produk,produk_id',
             'kartu_catatan_kesehatan' => 'nullable|string|max:255',
         ];
     }
 
-    // Daftar label yang dilarang ortu, ternormalisasi (mis. ["tidak_sehat"]).
+    // Daftar label yang dilarang ortu, ternormalisasi (string unik dari master label).
     public function labelDilarang(): array
     {
-        return array_values(array_intersect((array) ($this->kartu_label_dilarang ?? []), ['sehat', 'tidak_sehat']));
+        return array_values(array_unique(array_filter(array_map('strval', (array) ($this->kartu_label_dilarang ?? [])))));
     }
 
     // Daftar produk_id spesifik yang dilarang ortu, ternormalisasi int.

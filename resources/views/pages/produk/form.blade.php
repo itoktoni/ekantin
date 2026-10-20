@@ -11,6 +11,7 @@
                 <x-input col="6" name="produk_nama" label="Nama Produk" />
                 <x-select col="6" name="produk_kategori" label="Kategori" :options="$kategori" />
                 <x-select col="6" name="produk_label" label="Label Kesehatan" :options="$label" />
+                <p class="col-span-6 text-xs text-on-surface-variant self-center">Tidak ada label yang cocok? <a href="{{ route('label.getTable') }}" class="text-primary font-bold underline">Kelola Label Kesehatan</a></p>
                 <x-input col="6" type="number" name="produk_harga" label="Harga (Rp)" />
                 <x-select col="6" name="produk_status" label="Status" :options="$status" />
 

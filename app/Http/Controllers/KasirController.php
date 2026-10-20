@@ -91,7 +91,7 @@ class KasirController extends Controller
     // Cek IDOR: vendor/orang_tua/pengguna hanya boleh lihat struk transaksinya sendiri.
     public function getStruk(GeneralRequest $request, $id)
     {
-        $trx = Transaksi::with(['hasKartu.hasUser', 'hasItems.hasGerai'])->findOrFail($id);
+        $trx = Transaksi::with(['hasKartu.hasUser', 'hasItems.hasGerai', 'hasFees'])->findOrFail($id);
         $role = auth()->user()?->role;
         if ($role === 'vendor') {
             $ids = Gerai::where('gerai_id_vendor', auth()->id())->pluck('gerai_id');

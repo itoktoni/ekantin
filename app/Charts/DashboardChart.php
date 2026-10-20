@@ -82,7 +82,7 @@ class DashboardChart
             // kurangi fee proporsional harian: total fee harian * (subtotal gerai / total harian)
             // sederhanakan: pakai bersih = subtotal - fee proporsional (hitung fee harian total)
             // ambil fee total harian
-            $feeHarian = Transaksi::whereDate('created_at', $date)->where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')
+            $feeHarian = Transaksi::with('hasFees')->whereDate('created_at', $date)->where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')
                 ->where(function ($w) use ($ids) { $w->whereIn('transaksi_id_gerai', $ids)->orWhereHas('hasItems', fn ($q) => $q->whereIn('item_id_gerai', $ids)); })
                 ->get()->sum(fn ($t) => $t->feeTotal());
             // proporsi: jika ada multi gerai transaksi, fee dibagi proporsional oleh SplitDana — untuk hari ini pakai ratio subtotal gerai / total subtotal hari

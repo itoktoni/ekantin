@@ -19,6 +19,9 @@ class Gerai extends BaseModel
         'gerai_id_vendor',
         'gerai_saldo',
         'gerai_status',
+        'gerai_bank',
+        'gerai_no_rekening',
+        'gerai_nama_rekening',
     ];
 
     public static $filterColumns = [
@@ -28,6 +31,9 @@ class Gerai extends BaseModel
 
     public static $sortColumns = [
         'gerai_nama',
+        'gerai_bank',
+        'gerai_no_rekening',
+        'gerai_nama_rekening',
         'gerai_saldo',
         'gerai_status',
     ];
@@ -51,6 +57,9 @@ class Gerai extends BaseModel
             'gerai_id_vendor' => 'required|exists:users,id',
             'gerai_saldo' => 'integer|min:0',
             'gerai_status' => 'required|in:buka,tutup',
+            'gerai_bank' => 'nullable|string|max:50',
+            'gerai_no_rekening' => 'nullable|string|max:30',
+            'gerai_nama_rekening' => 'nullable|string|max:100',
         ];
     }
 

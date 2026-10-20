@@ -40,6 +40,7 @@ Route::middleware(['auth', 'verified', 'access'])->group(function () {
     Route::auto('/kartu', 'KartuController', ['name' => 'kartu']);
     Route::auto('/gerai', 'GeraiController', ['name' => 'gerai']);
     Route::auto('/produk', 'ProdukController', ['name' => 'produk']);
+    Route::auto('/label', 'LabelController', ['name' => 'label']);
     Route::auto('/transaksi', 'TransaksiController', ['name' => 'transaksi']);
     Route::auto('/fee-config', 'FeeConfigController', ['name' => 'fee-config']);
     Route::auto('/fee', 'FeeController', ['name' => 'fee']);
@@ -60,6 +61,11 @@ Route::middleware(['auth', 'verified', 'access'])->group(function () {
     Route::get('/topup/web/status/{id}', [TopupController::class, 'getWebStatus'])->name('topup.web.status');
     Route::post('/topup/web/bayar/{id}', [TopupController::class, 'postWebBayar'])->name('topup.web.bayar');
     Route::get('/laporan', [LaporanController::class, 'getIndex'])->name('laporan.index');
+    Route::get('/laporan/transaksi', [LaporanController::class, 'getTransaksi'])->name('laporan.transaksi');
+    Route::get('/laporan/fee', [LaporanController::class, 'getFee'])->name('laporan.fee');
+    Route::get('/laporan/vendor', [LaporanController::class, 'getVendor'])->name('laporan.vendor');
+    Route::get('/laporan/penarikan', [LaporanController::class, 'getPenarikan'])->name('laporan.penarikan');
+    Route::get('/laporan/cetak/{jenis}', [LaporanController::class, 'getCetak'])->name('laporan.cetak');
     Route::get('/laporan/ekspor', [LaporanController::class, 'getEkspor'])->name('laporan.ekspor');
     Route::get('/kartu-cetak', [KartuController::class, 'getCetak'])->name('kartu.cetak');
 

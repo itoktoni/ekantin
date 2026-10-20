@@ -42,6 +42,7 @@ return [
             'items' => [
                 ['route' => 'gerai.getTable', 'icon' => 'store', 'label' => 'Gerai', 'match' => ['gerai.getTable','gerai.getCreate','gerai.postCreate','gerai.getUpdate','gerai.postUpdate','gerai.getDelete','gerai.postDelete','gerai.getShow']],
                 ['route' => 'produk.getTable', 'icon' => 'fastfood', 'label' => 'Produk', 'match' => ['produk.*']],
+                ['route' => 'label.getTable', 'icon' => 'label', 'label' => 'Label Kesehatan', 'match' => ['label.*']],
                 ['route' => 'transaksi.getTable', 'icon' => 'receipt_long', 'label' => 'Transaksi', 'match' => ['transaksi.*']],
                 ['route' => 'penarikan.getTable', 'icon' => 'savings', 'label' => 'Penarikan', 'match' => ['penarikan.*']],
                 ['route' => 'pembagian.getTable', 'icon' => 'payments', 'label' => 'Pembagian Harian', 'match' => ['pembagian.*']],
@@ -50,7 +51,10 @@ return [
         [
             'label' => 'Laporan & Fee',
             'items' => [
-                ['route' => 'laporan.index', 'icon' => 'assessment', 'label' => 'Laporan', 'match' => ['laporan.*']],
+                ['route' => 'laporan.transaksi', 'icon' => 'receipt_long', 'label' => 'Lap. Transaksi', 'match' => ['laporan.transaksi'], 'roles' => ['admin', 'super_admin', 'developer', 'vendor', 'orang_tua', 'pengguna']],
+                ['route' => 'laporan.fee', 'icon' => 'percent', 'label' => 'Lap. Fee', 'match' => ['laporan.fee'], 'roles' => ['admin', 'super_admin', 'developer', 'vendor', 'orang_tua', 'pengguna']],
+                ['route' => 'laporan.vendor', 'icon' => 'store', 'label' => 'Lap. Vendor', 'match' => ['laporan.vendor'], 'roles' => ['admin', 'super_admin', 'developer', 'vendor']],
+                ['route' => 'laporan.penarikan', 'icon' => 'savings', 'label' => 'Lap. Penarikan', 'match' => ['laporan.penarikan'], 'roles' => ['admin', 'super_admin', 'developer', 'vendor', 'kasir_sekolah']],
                 ['route' => 'fee.getTable', 'icon' => 'percent', 'label' => 'Fee Produk', 'match' => ['fee.*']],
             ],
         ],

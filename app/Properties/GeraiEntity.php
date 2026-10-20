@@ -43,4 +43,34 @@ trait GeraiEntity
     {
         return $this->{static::field_status()};
     }
+
+    public static function field_bank(): string
+    {
+        return 'gerai_bank';
+    }
+
+    public function getFieldBankAttribute(): mixed
+    {
+        return $this->{static::field_bank()};
+    }
+
+    public static function field_no_rekening(): string
+    {
+        return 'gerai_no_rekening';
+    }
+
+    public function getFieldNoRekeningAttribute(): mixed
+    {
+        return $this->{static::field_no_rekening()};
+    }
+
+    public static function field_nama_rekening(): string
+    {
+        return 'gerai_nama_rekening';
+    }
+
+    public function getFieldNamaRekeningAttribute(): mixed
+    {
+        return $this->{static::field_nama_rekening()};
+    }
 }

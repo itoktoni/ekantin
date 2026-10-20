@@ -69,6 +69,10 @@
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Status</p>
                                 <p class="text-xs font-medium text-on-surface">{{ $table->gerai_status }}</p>
                             </div>
+                            <div class="col-span-2">
+                                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Rekening</p>
+                                <p class="text-xs font-mono text-on-surface truncate">{{ $table->gerai_bank ?? '-' }} • {{ $table->gerai_no_rekening ?? '-' }} • {{ $table->gerai_nama_rekening ?? '-' }}</p>
+                            </div>
                         </div>
                         <div class="flex items-center justify-between pt-2 border-t border-outline-variant/50">
                             <span class="text-[9px] font-mono text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">{{ $table->field_primary }}</span>

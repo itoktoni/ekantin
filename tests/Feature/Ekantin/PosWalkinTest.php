@@ -14,7 +14,7 @@ test("walk-in tunai sukses tanpa kartu, fee tetap, saldo kartu utuh", function (
         ->and($r["data"]->transaksi_metode)->toBe("tunai")
         ->and($r["data"]->transaksi_id_kartu)->toBeNull()
         ->and($r["data"]->transaksi_fee_total)->toBe(1000)
-        ->and($r["data"]->transaksi_fee_rincian)->toBe(["sistem" => 1000])
+        ->and($r["data"]->hasFees()->pluck("tfee_nominal", "tfee_code")->all())->toBe(["sistem" => 1000])
         ->and($gerai->fresh()->gerai_saldo)->toBe(20000 - 1000)
         ->and($kartu->fresh()->kartu_saldo)->toBe(50000);
 });

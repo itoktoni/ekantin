@@ -29,7 +29,35 @@
             <a href="{{ route('kasir.struk', ['id' => $model->transaksi_id]) }}" target="_blank" class="inline-flex items-center gap-1.5 h-9 px-4 text-sm rounded-xl border border-outline-variant">Preview</a>
         </div>
 
-        <x-card :label="'Transaksi #'.$model->transaksi_id" icon="receipt_long">
+        {{-- Pembatalan / Refund --}}
+        @if($model->hasRefund)
+        <x-card label="Pembatalan" icon="undo">
+            <div class="col-span-12 flex flex-wrap items-center gap-2 text-sm">
+                <x-badge type="warning">Sudah dibatalkan</x-badge>
+                <span class="text-on-surface-variant">Dana {{ $uang((int) $model->transaksi_total + (int) $feeTotal) }} kembali ke kartu.</span>
+                <a href="{{ moduleRoute('getUpdate', ['id' => $model->hasRefund->transaksi_id]) }}" wire:navigate class="font-semibold text-primary hover:underline">Lihat refund #{{ $model->hasRefund->transaksi_id }}</a>
+            </div>
+        </x-card>
+        @elseif($model->transaksi_jenis === 'beli' && $model->transaksi_status === 'berhasil')
+        @can('refund', $model)
+        <x-card label="Batalkan Transaksi" icon="undo">
+            <div class="col-span-12 text-sm text-on-surface-variant">
+                Dana <strong class="text-on-surface">{{ $uang((int) $model->transaksi_total + (int) $feeTotal) }}</strong> (belanja + fee) kembali ke saldo kartu, pembagian bersih ditarik dari gerai. Satu transaksi hanya bisa dibatalkan sekali.
+            </div>
+            <div class="col-span-12" id="refund">
+                <form action="{{ route('transaksi.postRefund', ['id' => $model->transaksi_id]) }}" method="POST" class="grid grid-cols-12 gap-3">
+                    @csrf
+                    <x-textarea col="12" name="transaksi_alasan" label="Alasan Pembatalan" placeholder="Mis. salah input kasir, anak tidak jadi jajan" />
+                    <div class="col-span-12 mt-1">
+                        <x-button variant="error" type="submit" icon="undo" onclick="return confirm('Batalkan transaksi #{{ $model->transaksi_id }}? Dana kembali ke kartu.')">Batalkan & Refund</x-button>
+                    </div>
+                </form>
+            </div>
+        </x-card>
+        @endcan
+        @endif
+
+        <x-card :label="'Transaksi '.($model->transaksi_kode ?? '#'.$model->transaksi_id)" icon="receipt_long">
             <div class="col-span-12 flex flex-wrap items-center gap-2">
                 <x-badge type="info">{{ $jenis[$model->transaksi_jenis] ?? $model->transaksi_jenis }}</x-badge>
                 <x-badge :type="$badgeStatus">{{ $status[$model->transaksi_status] ?? $model->transaksi_status }}</x-badge>
@@ -174,7 +202,7 @@
                 @endphp
                 @foreach ($feeRincian as $kode => $nominal)
                 <div class="flex items-center justify-between text-sm">
-                    <span class="text-on-surface-variant">Fee {{ $feeNama[$kode] ?? $kode }}@if(isset($feePersen[$kode])) ({{ rtrim(rtrim(number_format((float)$feePersen[$kode],2,',','.'),'0'),',') }}%)@endif</span>
+                    <span class="text-on-surface-variant">Fee {{ $feeNama[$kode] ?? $kode }}@if(feeTarif($kode)) ({{ feeTarif($kode) }})@endif</span>
                     <span class="text-on-surface">{{ $uang($nominal) }}</span>
                 </div>
                 @endforeach

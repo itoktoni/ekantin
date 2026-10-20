@@ -56,7 +56,7 @@ class Produk extends BaseModel
             'produk_id_gerai' => 'required|exists:gerai,gerai_id',
             'produk_nama' => 'required|string|max:100',
             'produk_kategori' => 'required|in:makanan,minuman,snack',
-            'produk_label' => 'required|in:sehat,tidak_sehat',
+            'produk_label' => 'nullable|string|max:50|exists:label,label_nama',
             'produk_harga' => 'required|integer|min:1',
             'produk_status' => 'required|in:tersedia,tidak',
             'produk_foto' => 'nullable|string|max:255',

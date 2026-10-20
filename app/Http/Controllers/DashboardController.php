@@ -24,7 +24,7 @@ class DashboardController extends Controller
             $kartuIds = $kartus->pluck('kartu_id')->all();
             $hariIni = today();
             $belanjaHariIni = Transaksi::whereIn('transaksi_id_kartu', $kartuIds)->whereDate('created_at', $hariIni)->where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')->sum('transaksi_total');
-            $feeHariIni = Transaksi::whereIn('transaksi_id_kartu', $kartuIds)->whereDate('created_at', $hariIni)->where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')->get()->sum(fn($t) => $t->feeTotal());
+            $feeHariIni = Transaksi::with('hasFees')->whereIn('transaksi_id_kartu', $kartuIds)->whereDate('created_at', $hariIni)->where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')->get()->sum(fn($t) => $t->feeTotal());
             $transaksiHariIni = Transaksi::whereIn('transaksi_id_kartu', $kartuIds)->whereDate('created_at', $hariIni)->where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')->count();
             $recentTransaksi = Transaksi::with(['hasKartu.hasUser','hasItems.hasGerai'])->whereIn('transaksi_id_kartu', $kartuIds)->latest('transaksi_id')->limit(5)->get();
             $statsOrtu = [
@@ -57,7 +57,7 @@ class DashboardController extends Controller
             }
             $hariIni = today();
             $pakaiHariIni = Transaksi::where('transaksi_id_kartu', $kartu->kartu_id)->whereDate('created_at', $hariIni)->where('transaksi_jenis','beli')->where('transaksi_status','berhasil')->sum('transaksi_total');
-            $feeHariIni = Transaksi::where('transaksi_id_kartu', $kartu->kartu_id)->whereDate('created_at', $hariIni)->where('transaksi_jenis','beli')->where('transaksi_status','berhasil')->get()->sum(fn($t) => $t->feeTotal());
+            $feeHariIni = Transaksi::with('hasFees')->where('transaksi_id_kartu', $kartu->kartu_id)->whereDate('created_at', $hariIni)->where('transaksi_jenis','beli')->where('transaksi_status','berhasil')->get()->sum(fn($t) => $t->feeTotal());
             $recentTransaksi = Transaksi::with(['hasItems.hasGerai'])->where('transaksi_id_kartu', $kartu->kartu_id)->latest('transaksi_id')->limit(5)->get();
             $statsPengguna = [
                 'saldo' => (int) $kartu->kartu_saldo,
@@ -86,7 +86,7 @@ class DashboardController extends Controller
                 ->whereDate('transaksi.created_at', $hariIni)->where('transaksi.transaksi_jenis', 'beli')->where('transaksi.transaksi_status', 'berhasil')
                 ->sum('transaksi_item.item_subtotal');
             // fee hari ini proporsional sederhana: total fee transaksi hari ini * ratio
-            $feeHariIni = Transaksi::whereDate('created_at', $hariIni)->where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')
+            $feeHariIni = Transaksi::with('hasFees')->whereDate('created_at', $hariIni)->where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')
                 ->where(function ($q) use ($geraiIds) { $q->whereIn('transaksi_id_gerai', $geraiIds)->orWhereHas('hasItems', fn ($qq) => $qq->whereIn('item_id_gerai', $geraiIds)); })
                 ->get()->sum(fn ($t) => $t->feeTotal());
             // ratio untuk pendapatan bersih gerai hari ini
@@ -123,7 +123,7 @@ class DashboardController extends Controller
             $hariIni = today();
             $transaksiHariIni = Transaksi::whereDate('created_at', $hariIni)->where('transaksi_jenis','beli')->where('transaksi_status','berhasil')->count();
             $omzetHariIni = Transaksi::whereDate('created_at', $hariIni)->where('transaksi_jenis','beli')->where('transaksi_status','berhasil')->sum('transaksi_total');
-            $feeHariIni = Transaksi::whereDate('created_at', $hariIni)->where('transaksi_jenis','beli')->where('transaksi_status','berhasil')->get()->sum(fn($t) => $t->feeTotal());
+            $feeHariIni = Transaksi::with('hasFees')->whereDate('created_at', $hariIni)->where('transaksi_jenis','beli')->where('transaksi_status','berhasil')->get()->sum(fn($t) => $t->feeTotal());
             $topupMenunggu = Transaksi::where('transaksi_jenis','topup_web')->where('transaksi_status','menunggu')->count();
             $topupHariIni = Transaksi::whereDate('created_at',$hariIni)->whereIn('transaksi_jenis',['topup_web','topup_tunai'])->where('transaksi_status','berhasil')->count();
             $pesananBaru = TransaksiItem::where('item_status','baru')->count();
@@ -165,7 +165,7 @@ class DashboardController extends Controller
         $pendapatanPerGerai = $chart->pendapatanPerGerai();
         $ekantinChart = $chart->kasirTransaksiHarian();
         $fees = \App\Models\Fee::query()->orderBy('fee_id')->get();
-        $trxBulan = Transaksi::where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')
+        $trxBulan = Transaksi::with('hasFees')->where('transaksi_jenis', 'beli')->where('transaksi_status', 'berhasil')
             ->whereYear('created_at', now()->year)->whereMonth('created_at', now()->month)->get();
         $feeBulanTotal = (int) $trxBulan->sum(fn ($t) => $t->feeTotal());
         $feeBulanRincian = [];

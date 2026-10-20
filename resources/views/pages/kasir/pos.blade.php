@@ -174,9 +174,11 @@
                                     <span class="material-symbols-outlined text-[13px]">{{ $ikon }}</span>
                                     {{ $p->produk_kategori }}
                                 </span>
-                                <span class="absolute top-1.5 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm {{ $p->produk_label === 'sehat' ? 'bg-success text-on-success' : 'bg-error/90 text-on-error' }}" style="right:6px">
-                                    {{ $p->produk_label === 'sehat' ? 'Sehat' : 'Tidak Sehat' }}
+                                @if($p->produk_label)
+                                <span class="absolute top-1.5 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold bg-white text-black" style="right:6px">
+                                    {{ $p->produk_label }}
                                 </span>
+                                @endif
                             </span>
 
                             <span class="block px-2.5 pt-2 pb-1">

@@ -4,6 +4,16 @@ namespace App\Properties;
 
 trait TransaksiEntity
 {
+    public static function field_kode(): string
+    {
+        return 'transaksi_kode';
+    }
+
+    public function getFieldKodeAttribute(): mixed
+    {
+        return $this->{static::field_kode()};
+    }
+
     public static function field_jenis(): string
     {
         return 'transaksi_jenis';

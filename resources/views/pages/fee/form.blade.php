@@ -9,7 +9,8 @@
 
                 <x-input col="4" name="code_fee" label="Kode Fee (huruf kecil, tanpa spasi)" />
                 <x-input col="4" name="nama_fee" label="Nama Fee" />
-                <x-input col="4" type="number" step="0.01" name="value_fee" label="Persen (0–100)" helper="Persen dipotong dari harga produk terjual" />
+                <x-select col="4" name="fee_tipe" label="Tipe Fee" :options="['persen' => 'Persen (%)', 'nominal' => 'Nominal (Rp)']" />
+                <x-input col="4" type="number" step="0.01" name="value_fee" label="Nilai (%, maks 100 / Rp)" helper="Persen dari harga produk, atau nominal flat per transaksi" />
 
             @endbind
         </x-card>

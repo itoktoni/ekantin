@@ -11,6 +11,10 @@
                 <x-select col="6" name="gerai_id_vendor" label="Vendor" :options="$vendor" />
                 <x-select col="6" name="gerai_status" label="Status" :options="$status" />
 
+                <x-input col="6" name="gerai_bank" label="Nama Bank" />
+                <x-input col="6" name="gerai_no_rekening" label="No. Rekening" />
+                <x-input col="6" name="gerai_nama_rekening" label="Atas Nama" />
+
             @endbind
         </x-card>
 

@@ -46,7 +46,7 @@
             </div>
             <div class="r-line">--------------------------------</div>
             <div class="r-meta">
-                <div><span>No</span><b>#{{ str_pad($trx->transaksi_id,6,'0',STR_PAD_LEFT) }}</b></div>
+                <div><span>No</span><b>{{ $trx->transaksi_kode ?? '#'.str_pad($trx->transaksi_id,6,'0',STR_PAD_LEFT) }}</b></div>
                 <div><span>Tgl</span><b>{{ formatDate($trx->created_at,'d/m/y H:i') }}</b></div>
                 <div><span>Kasir</span><b class="r-trunc">{{ $kasirNama }}</b></div>
                 <div><span>Jenis</span><b>{{ $trx->transaksi_jenis }} / {{ $trx->transaksi_status }}</b></div>
@@ -88,7 +88,7 @@
                 <div><span>Subtotal</span><span>{{ formatAngka((int)$trx->transaksi_total,'Rp') }}</span></div>
                 @if($feeTotal>0)
                 @foreach($feeRincian as $kode => $nominal)
-                <div class="r-fee"><span>Fee {{ $feeNama[$kode] ?? $kode }}@if(isset($feePersen[$kode])) ({{ rtrim(rtrim(number_format((float)$feePersen[$kode],2,',','.'),'0'),',') }}%)@endif</span><span>{{ formatAngka((int)$nominal,'Rp') }}</span></div>
+                <div class="r-fee"><span>Fee {{ $feeNama[$kode] ?? $kode }}@if(feeTarif($kode)) ({{ feeTarif($kode) }})@endif</span><span>{{ formatAngka((int)$nominal,'Rp') }}</span></div>
                 @endforeach
                 <div class="r-sum-total"><span>Total fee</span><span>{{ formatAngka($feeTotal,'Rp') }}</span></div>
                 <div class="r-sum-pay"><span>POTONG SALDO</span><span>{{ formatAngka($totalPotong,'Rp') }}</span></div>

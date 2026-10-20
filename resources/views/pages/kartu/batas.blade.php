@@ -3,7 +3,7 @@
 <x-layouts::app>
     <x-breadcrumb :items="[['url'=>'/dashboard','label'=>'Home'],['url'=>route('kartu.getAnak'),'label'=>'Anak Saya'],['url'=>'','label'=>'Batasan Jajan']]" />
     <div class="content mt-4 lg:mt-0">
-        <p class="text-xs text-on-surface-variant mb-3">Contoh: anak alergi / sedang sakit (flu, batuk) — centang label <strong>tidak sehat</strong> sebagai dilarang, atau blokir produk tertentu. Kasir otomatis menolak saat scan kartu.</p>
+        <p class="text-xs text-on-surface-variant mb-3">Contoh: anak alergi / sedang sakit (flu, batuk) — centang label <strong>manis / seafood / alergen</strong> sebagai dilarang, atau blokir produk tertentu. Kasir otomatis menolak saat scan kartu.</p>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             @foreach($kartus as $k)
             <x-card :label="($k->hasUser?->name ?? $k->kartu_barcode) . ' — Batasan'" icon="tune">
@@ -64,7 +64,7 @@
     <script>
     (function () {
         // Chip aktif dibaca dari aria-pressed (lihat app.css) — sinkronkan dari checkbox.
-        // Pilih label (mis. Tidak Sehat) = otomatis centang semua produk berlabel sama di form anak ini.
+        // Pilih label (mis. manis) = otomatis centang semua produk berlabel sama di form anak ini.
         document.querySelectorAll('label.chip input[type="checkbox"]').forEach(function (box) {
             var chip = box.closest('label.chip');
             var form = box.closest('form');

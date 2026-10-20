@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Ekantin\RefundAction;
 use App\Concerns\ControllerTrait;
 use App\Enums\Ekantin\TransaksiJenisEnum;
 use App\Enums\Ekantin\TransaksiStatusEnum;
@@ -56,7 +57,7 @@ class TransaksiController extends Controller
 
     protected function getData()
     {
-        $q = $this->scopedQuery()->with(['hasKartu.hasUser']);
+        $q = $this->scopedQuery()->with(['hasKartu.hasUser', 'hasRefund', 'hasFees']);
         // filter virtual: nama_pengguna & barcode via hasKartu
         $filters = request()->input('filters', []);
         $virtualHandled = false;
@@ -92,7 +93,7 @@ class TransaksiController extends Controller
     public function getUpdate(GeneralRequest $request, $id)
     {
         $trx = $this->scopedQuery()
-            ->with(['hasKartu.hasUser', 'hasGerai', 'hasItems.hasGerai', 'hasKasir'])
+            ->with(['hasKartu.hasUser', 'hasGerai', 'hasItems.hasGerai', 'hasKasir', 'hasRefund', 'hasFees'])
             ->findOrFail($id);
 
         $feeTotal = $trx->feeTotal();
@@ -130,6 +131,21 @@ class TransaksiController extends Controller
     public function getCreate(GeneralRequest $request)
     {
         abort(404);
+    }
+
+    // Pembatalan (refund): kembalikan total+fee ke kartu + tarik bersih gerai via RefundAction.
+    // Hanya pembelian berhasil yang belum pernah di-refund. Vendor/orang_tua/pengguna ditolak via policy.
+    public function postRefund(GeneralRequest $request, $id)
+    {
+        $trx = $this->scopedQuery()->findOrFail($id);
+        $data = $request->validate(['transaksi_alasan' => 'required|string|max:255']);
+        $response = RefundAction::run([
+            'transaksi_id' => $trx->transaksi_id,
+            'alasan' => $data['transaksi_alasan'],
+            'id_admin' => auth()->id(),
+        ]);
+
+        return $this->response($response);
     }
 
     public function postCreate(GeneralRequest $request)

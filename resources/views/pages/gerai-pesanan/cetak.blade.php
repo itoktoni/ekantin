@@ -89,7 +89,7 @@
                 <div><span>Subtotal gerai ini</span><span>{{ formatAngka((int)$trx->hasItems->sum('item_subtotal'),'Rp') }}</span></div>
                 @if($feeTotal>0)
                 @foreach($feeRincian as $kode => $nominal)
-                <div class="r-fee"><span>Fee {{ $feeNama[$kode] ?? $kode }}@if(isset($feePersen[$kode])) ({{ rtrim(rtrim(number_format((float)$feePersen[$kode],2,',','.'),'0'),',') }}%)@endif</span><span>{{ formatAngka((int)$nominal,'Rp') }}</span></div>
+                <div class="r-fee"><span>Fee {{ $feeNama[$kode] ?? $kode }}@if(feeTarif($kode)) ({{ feeTarif($kode) }})@endif</span><span>{{ formatAngka((int)$nominal,'Rp') }}</span></div>
                 @endforeach
                 <div class="r-sum-total"><span>Total fee (transaksi)</span><span>{{ formatAngka($feeTotal,'Rp') }}</span></div>
                 <div class="r-sum-pay"><span>POTONG SALDO</span><span>{{ formatAngka($totalPotong,'Rp') }}</span></div>

@@ -26,6 +26,7 @@
             <x-slot:head>
                 <x-table-checkbox :model="$model" onchange="toggleAll(this)" />
                 <th>Actions</th>
+                <th>Kode</th>
                 <th>Pengguna</th>
                 <x-table-sort field="transaksi_jenis" label="Jenis" :sortField="$sortField" :sortDir="$sortDir" />
                 <x-table-sort field="transaksi_status" label="Status" :sortField="$sortField" :sortDir="$sortDir" />
@@ -47,7 +48,15 @@
                         <a href="{{ route('kasir.struk', ['id' => $table->field_primary]) }}" target="_blank" title="Reprint Struk 58mm" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-secondary/10 text-secondary hover:bg-secondary/20 transition-colors">
                             <span class="material-symbols-outlined text-lg">print</span>
                         </a>
+                        @can('refund', $model)
+                        @if($table->transaksi_jenis === 'beli' && $table->transaksi_status === 'berhasil' && !$table->hasRefund)
+                        <a href="{{ moduleRoute('getUpdate', ['id' => $table->field_primary]) }}#refund" wire:navigate title="Batalkan / Refund" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-warning/10 text-warning hover:bg-warning/20 transition-colors">
+                            <span class="material-symbols-outlined text-lg">undo</span>
+                        </a>
+                        @endif
+                        @endcan
                     </x-table-action>
+                    <td class="font-mono text-xs">{{ $table->transaksi_kode ?? '#'.$table->field_primary }}</td>
                     <td>
                         <div class="flex flex-col">
                             <span class="text-sm font-semibold text-on-surface truncate max-w-[160px]">{{ $namaPengguna }}</span>
@@ -75,7 +84,7 @@
                         $namaPenggunaM = $table->hasKartu?->hasUser?->name ?? $table->hasKartu?->kartu_nis ?? '-';
                     @endphp
                     <div class="border border-outline-variant rounded-xl p-4 bg-surface-container-lowest shadow-sm hover:border-primary/40 cursor-pointer" data-id="{{ $table->field_primary }}" onclick="window.location='{{ moduleRoute('getUpdate', ['id' => $table->field_primary]) }}'">
-                        <p class="text-sm font-bold text-on-surface truncate mb-1">{{ $namaPenggunaM }}</p>
+                        <p class="text-sm font-bold text-on-surface truncate mb-1">{{ $namaPenggunaM }} <span class="font-mono font-normal text-xs text-primary">{{ $table->transaksi_kode ?? '#'.$table->field_primary }}</span></p>
                         <p class="text-xs font-mono text-on-surface-variant truncate mb-3">{{ $table->transaksi_jenis }} • {{ formatAngka((int) $table->transaksi_total, 'Rp') }} @if($feeTotalM>0) <span class="text-error">-{{ formatAngka($feeTotalM, 'Rp') }} fee</span> @endif</p>
                         <div class="grid grid-cols-2 gap-3 mb-3">
                             <div>
@@ -102,6 +111,13 @@
                                     <a href="{{ route('kasir.struk', ['id' => $table->field_primary]) }}" target="_blank" title="Reprint" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-secondary/10 text-secondary">
                                         <span class="material-symbols-outlined text-lg">print</span>
                                     </a>
+                                    @can('refund', $model)
+                                    @if($table->transaksi_jenis === 'beli' && $table->transaksi_status === 'berhasil' && !$table->hasRefund)
+                                    <a href="{{ moduleRoute('getUpdate', ['id' => $table->field_primary]) }}#refund" wire:navigate title="Batalkan / Refund" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-warning/10 text-warning hover:bg-warning/20 transition-colors">
+                                        <span class="material-symbols-outlined text-lg">undo</span>
+                                    </a>
+                                    @endif
+                                    @endcan
                                 </x-table-action>
                             </div>
                         </div>
