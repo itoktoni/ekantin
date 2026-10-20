@@ -42,7 +42,7 @@
                             <p class="text-[11px] font-bold text-on-surface-variant mt-1">{{ $namaGerai }}</p>
                             @foreach($items as $p)
                             <label class="flex items-center gap-2 text-sm rounded-lg px-2 py-1 hover:bg-surface-container cursor-pointer">
-                                <input type="checkbox" name="kartu_produk_dilarang[]" value="{{ $p->produk_id }}"
+                                <input type="checkbox" name="kartu_produk_dilarang[]" value="{{ $p->produk_id }}" data-produk="{{ $p->produk_label }}"
                                     @checked(in_array((int) $p->produk_id, (array) old('kartu_produk_dilarang', $k->produkDilarang()))) />
                                 <span class="flex-1 truncate">{{ $p->produk_nama }}</span>
                                 <span class="text-[10px] px-2 py-0.5 rounded-full bg-surface-container border">{{ $p->produk_label }}</span>
@@ -60,4 +60,25 @@
             @endforeach
         </div>
     </div>
+
+    <script>
+    (function () {
+        // Chip aktif dibaca dari aria-pressed (lihat app.css) — sinkronkan dari checkbox.
+        // Pilih label (mis. Tidak Sehat) = otomatis centang semua produk berlabel sama di form anak ini.
+        document.querySelectorAll('label.chip input[type="checkbox"]').forEach(function (box) {
+            var chip = box.closest('label.chip');
+            var form = box.closest('form');
+            if (!chip || !form) return;
+            var sync = function () { chip.setAttribute('aria-pressed', String(box.checked)); };
+            var terapkan = function () {
+                form.querySelectorAll('input[name="kartu_produk_dilarang[]"][data-produk="' + box.value + '"]').forEach(function (p) {
+                    p.checked = box.checked;
+                });
+            };
+            box.addEventListener('change', function () { sync(); terapkan(); });
+            sync();
+            if (box.checked) terapkan();
+        });
+    })();
+    </script>
 </x-layouts::app>
