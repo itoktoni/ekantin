@@ -17,6 +17,7 @@ class Produk extends BaseModel
         'produk_id_gerai',
         'produk_nama',
         'produk_kategori',
+        'produk_label',
         'produk_harga',
         'produk_status',
         'produk_foto',
@@ -25,12 +26,14 @@ class Produk extends BaseModel
     public static $filterColumns = [
         'produk_nama' => 'Nama',
         'produk_kategori' => 'Kategori',
+        'produk_label' => 'Label',
         'produk_status' => 'Status',
     ];
 
     public static $sortColumns = [
         'produk_nama',
         'produk_kategori',
+        'produk_label',
         'produk_harga',
         'produk_status',
     ];
@@ -53,6 +56,7 @@ class Produk extends BaseModel
             'produk_id_gerai' => 'required|exists:gerai,gerai_id',
             'produk_nama' => 'required|string|max:100',
             'produk_kategori' => 'required|in:makanan,minuman,snack',
+            'produk_label' => 'required|in:sehat,tidak_sehat',
             'produk_harga' => 'required|integer|min:1',
             'produk_status' => 'required|in:tersedia,tidak',
             'produk_foto' => 'nullable|string|max:255',

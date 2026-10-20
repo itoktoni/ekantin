@@ -153,6 +153,7 @@
                         data-card="{{ $p->produk_id }}"
                         data-harga="{{ (int) $p->produk_harga }}"
                         data-kategori="{{ $p->produk_kategori }}"
+                        data-label="{{ $p->produk_label }}"
                         data-gerai="{{ $p->produk_id_gerai }}"
                         data-cari="{{ Str::lower($p->produk_nama.' '.$namaGerai) }}">
 
@@ -172,6 +173,9 @@
                                 <span class="absolute top-1.5 left-1.5 inline-flex items-center gap-1 rounded-full bg-surface-container-lowest/90 px-2 py-0.5 text-[10px] font-semibold text-on-surface-variant backdrop-blur-sm">
                                     <span class="material-symbols-outlined text-[13px]">{{ $ikon }}</span>
                                     {{ $p->produk_kategori }}
+                                </span>
+                                <span class="absolute top-1.5 right-1.5 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm {{ $p->produk_label === 'sehat' ? 'bg-success/90 text-on-success' : 'bg-error/90 text-on-error' }}">
+                                    {{ $p->produk_label === 'sehat' ? 'Sehat' : 'Tidak Sehat' }}
                                 </span>
                             </span>
 

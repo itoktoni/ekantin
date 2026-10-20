@@ -32,7 +32,7 @@ return [
             'label' => 'Kartu & Top Up',
             'items' => [
                 ['route' => 'kartu.getTable', 'icon' => 'badge', 'label' => 'Kartu Pengguna', 'match' => ['kartu.getTable','kartu.getCreate','kartu.postCreate','kartu.getUpdate','kartu.postUpdate','kartu.getDelete','kartu.postDelete','kartu.getShow','kartu.getCetak']],
-                ['route' => 'kartu.getAnak', 'icon' => 'family_restroom', 'label' => 'Anak Saya', 'match' => ['kartu.getAnak']],
+                ['route' => 'kartu.getAnak', 'icon' => 'family_restroom', 'label' => 'Anak Saya', 'match' => ['kartu.getAnak', 'kartu.getBatas', 'kartu.postBatas']],
                 ['route' => 'topup.tunai', 'icon' => 'payments', 'label' => 'Top Up Tunai', 'match' => ['topup.tunai'], 'roles' => ['admin', 'super_admin', 'developer', 'kasir_sekolah']],
                 ['route' => 'topup.web', 'icon' => 'account_balance_wallet', 'label' => 'Top Up Web', 'match' => ['topup.web'], 'roles' => ['admin', 'super_admin', 'developer', 'kasir_sekolah', 'orang_tua', 'pengguna']],
             ],

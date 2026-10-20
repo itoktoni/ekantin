@@ -32,6 +32,7 @@
                 </div>
                 <div class="col-span-12 flex gap-2 mt-2">
                     <a href="{{ route('transaksi.getTable') }}?filters[transaksi_id_kartu][\$eq]={{ $k->kartu_id }}" class="h-8 px-3 text-xs rounded-lg bg-primary text-on-primary inline-flex items-center gap-1"><span class="material-symbols-outlined text-sm">receipt_long</span> {{ $k->hasUser?->name }}</a>
+                    <a href="{{ route('kartu.getBatas') }}" class="h-8 px-3 text-xs rounded-lg border inline-flex items-center gap-1"><span class="material-symbols-outlined text-sm">tune</span> Atur Batasan</a>
                     <a href="{{ route('topup.web') }}?kartu={{ $k->kartu_barcode }}" class="h-8 px-3 text-xs rounded-lg border inline-flex items-center gap-1">Top Up</a>
                     <a href="{{ route('laporan.index') }}?transaksi_id_kartu={{ $k->kartu_id }}" class="h-8 px-3 inline-flex items-center  text-xs rounded-lg border">Laporan</a>
                 </div>

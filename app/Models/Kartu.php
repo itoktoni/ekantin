@@ -28,6 +28,9 @@ class Kartu extends BaseModel
         'kartu_saldo',
         'kartu_status',
         'kartu_limit_harian',
+        'kartu_label_dilarang',
+        'kartu_produk_dilarang',
+        'kartu_catatan_kesehatan',
     ];
 
     public static $filterColumns = [
@@ -50,6 +53,8 @@ class Kartu extends BaseModel
         return [
             'kartu_saldo' => 'integer',
             'kartu_limit_harian' => 'integer',
+            'kartu_label_dilarang' => 'array',
+            'kartu_produk_dilarang' => 'array',
         ];
     }
 
@@ -69,7 +74,37 @@ class Kartu extends BaseModel
             'kartu_saldo' => 'integer|min:0',
             'kartu_status' => 'required|in:aktif,nonaktif',
             'kartu_limit_harian' => 'nullable|integer|min:0',
+            'kartu_label_dilarang' => 'nullable|array',
+            'kartu_label_dilarang.*' => 'in:sehat,tidak_sehat',
+            'kartu_produk_dilarang' => 'nullable|array',
+            'kartu_produk_dilarang.*' => 'integer|exists:produk,produk_id',
+            'kartu_catatan_kesehatan' => 'nullable|string|max:255',
         ];
+    }
+
+    // Daftar label yang dilarang ortu, ternormalisasi (mis. ["tidak_sehat"]).
+    public function labelDilarang(): array
+    {
+        return array_values(array_intersect((array) ($this->kartu_label_dilarang ?? []), ['sehat', 'tidak_sehat']));
+    }
+
+    // Daftar produk_id spesifik yang dilarang ortu, ternormalisasi int.
+    public function produkDilarang(): array
+    {
+        return array_map('intval', (array) ($this->kartu_produk_dilarang ?? []));
+    }
+
+    // Cek satu produk: null = boleh, string = alasan penolakan untuk struk/kasir.
+    public function alasanBlokir(Produk $produk): ?string
+    {
+        if (in_array((int) $produk->produk_id, $this->produkDilarang(), true)) {
+            return "dilarang orang tua ({$produk->produk_nama})";
+        }
+        if (in_array((string) $produk->produk_label, $this->labelDilarang(), true)) {
+            return "label {$produk->produk_label} dibatasi ({$produk->produk_nama})";
+        }
+
+        return null;
     }
 
     public function hasUser(): BelongsTo

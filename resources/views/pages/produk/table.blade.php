@@ -57,7 +57,8 @@
                     @foreach($data as $table)
                     <div class="border border-outline-variant rounded-xl p-4 bg-surface-container-lowest shadow-sm" data-id="{{ $table->field_primary }}">
                         <p class="text-sm font-bold text-on-surface truncate mb-1">{{ $table->field_name }}</p>
-                        <p class="text-[11px] font-semibold inline-flex px-2 py-0.5 rounded-full bg-surface-container border border-outline-variant mb-3">{{ $table->produk_kategori ?? '-' }}</p>
+                        <p class="text-[11px] font-semibold inline-flex px-2 py-0.5 rounded-full bg-surface-container border border-outline-variant mb-1">{{ $table->produk_kategori ?? '-' }}</p>
+                        <p class="text-[11px] font-semibold inline-flex px-2 py-0.5 rounded-full bg-surface-container border border-outline-variant mb-3">{{ $table->produk_label ?? '-' }}</p>
                         <div class="grid grid-cols-2 gap-3 mb-3">
                             <div>
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Harga</p>

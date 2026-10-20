@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Concerns\ControllerTrait;
 use App\Enums\Ekantin\KartuStatusEnum;
+use App\Enums\Ekantin\ProdukLabelEnum;
 use App\Http\Requests\GeneralRequest;
 use App\Models\Kartu;
+use App\Models\Produk;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -70,6 +72,48 @@ class KartuController extends Controller
             'kartus' => $kartus,
             'transaksiPerAnak' => $transaksiPerAnak,
         ]);
+    }
+
+    // Orang tua: atur batasan jajan per anak (label dilarang + produk spesifik + catatan).
+    // Via Route::auto '/kartu' → kartu.getBatas (form) & kartu.postBatas (simpan).
+    public function getBatas(GeneralRequest $request)
+    {
+        $kartus = $this->getData()->with(['hasUser'])->get();
+        $produk = Produk::with('hasGerai')->where('produk_status', 'tersedia')
+            ->orderBy('produk_nama')->get()
+            ->groupBy(fn ($p) => $p->hasGerai?->gerai_nama ?? '-');
+
+        return $this->views('pages.kartu.batas', [
+            'kartus' => $kartus,
+            'kelompok' => $produk,
+            'labelOptions' => ProdukLabelEnum::getOptions(),
+        ]);
+    }
+
+    public function postBatas(GeneralRequest $request)
+    {
+        $data = $request->validate([
+            'kartu_id' => 'required|integer|exists:kartu,kartu_id',
+            'kartu_limit_harian' => 'nullable|integer|min:0',
+            'kartu_label_dilarang' => 'nullable|array',
+            'kartu_label_dilarang.*' => 'in:sehat,tidak_sehat',
+            'kartu_produk_dilarang' => 'nullable|array',
+            'kartu_produk_dilarang.*' => 'integer|exists:produk,produk_id',
+            'kartu_catatan_kesehatan' => 'nullable|string|max:255',
+        ]);
+        $kartu = Kartu::findOrFail($data['kartu_id']);
+        // IDOR: ortu hanya boleh ubah kartu anaknya sendiri.
+        if (auth()->user()?->role === 'orang_tua' && (int) $kartu->kartu_id_orangtua !== (int) auth()->id()) {
+            abort(403, 'Bukan anak Anda');
+        }
+        $kartu->update([
+            'kartu_limit_harian' => $data['kartu_limit_harian'] ?? null,
+            'kartu_label_dilarang' => ! empty($data['kartu_label_dilarang']) ? array_values($data['kartu_label_dilarang']) : null,
+            'kartu_produk_dilarang' => ! empty($data['kartu_produk_dilarang']) ? array_map('intval', $data['kartu_produk_dilarang']) : null,
+            'kartu_catatan_kesehatan' => $data['kartu_catatan_kesehatan'] ?? null,
+        ]);
+
+        return $this->response($this->payload(TOAST_SUCCESS, $kartu), redirect()->route('kartu.getBatas'));
     }
 
     // Search kartu untuk picker POS vendor + topup kasir (via Route::auto '/kartu' → kartu.getSearch).

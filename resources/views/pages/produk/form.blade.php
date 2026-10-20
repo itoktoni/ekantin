@@ -10,6 +10,7 @@
                 <x-select col="6" name="produk_id_gerai" label="Gerai" :options="$gerai" />
                 <x-input col="6" name="produk_nama" label="Nama Produk" />
                 <x-select col="6" name="produk_kategori" label="Kategori" :options="$kategori" />
+                <x-select col="6" name="produk_label" label="Label Kesehatan" :options="$label" />
                 <x-input col="6" type="number" name="produk_harga" label="Harga (Rp)" />
                 <x-select col="6" name="produk_status" label="Status" :options="$status" />
 

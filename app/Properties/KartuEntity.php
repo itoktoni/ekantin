@@ -83,4 +83,34 @@ trait KartuEntity
     {
         return $this->{static::field_limit_harian()};
     }
+
+    public static function field_label_dilarang(): string
+    {
+        return 'kartu_label_dilarang';
+    }
+
+    public function getFieldLabelDilarangAttribute(): mixed
+    {
+        return $this->{static::field_label_dilarang()};
+    }
+
+    public static function field_produk_dilarang(): string
+    {
+        return 'kartu_produk_dilarang';
+    }
+
+    public function getFieldProdukDilarangAttribute(): mixed
+    {
+        return $this->{static::field_produk_dilarang()};
+    }
+
+    public static function field_catatan_kesehatan(): string
+    {
+        return 'kartu_catatan_kesehatan';
+    }
+
+    public function getFieldCatatanKesehatanAttribute(): mixed
+    {
+        return $this->{static::field_catatan_kesehatan()};
+    }
 }

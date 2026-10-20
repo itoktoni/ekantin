@@ -54,6 +54,10 @@ class ProcessPurchaseAction
                     if (! $p) {
                         return $this->payload(TOAST_FAILED, 'Ada produk tidak tersedia.');
                     }
+                    // Batasan ortu: anak alergi/sakit tidak boleh beli label/produk terlarang.
+                    if ($kartu && ($alasan = $kartu->alasanBlokir($p))) {
+                        return $this->payload(TOAST_FAILED, "Ditolak untuk {$kartu->hasUser?->name}: {$alasan}.");
+                    }
                     $gerai = Gerai::whereKey($p->produk_id_gerai)->where('gerai_status', 'buka')->lockForUpdate()->first();
                     if (! $gerai) {
                         return $this->payload(TOAST_FAILED, "Gerai {$p->produk_nama} sedang tutup.");

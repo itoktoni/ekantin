@@ -54,6 +54,16 @@ trait ProdukEntity
         return $this->{static::field_kategori()};
     }
 
+    public static function field_label(): string
+    {
+        return 'produk_label';
+    }
+
+    public function getFieldLabelAttribute(): mixed
+    {
+        return $this->{static::field_label()};
+    }
+
     public static function field_foto(): string
     {
         return 'produk_foto';
